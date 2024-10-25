@@ -11,20 +11,17 @@ pub use utils::*;
 uniffi::setup_scaffolding!();
 
 use std::str;
-use std::collections::HashMap;
 use base64::Engine;
 use base64::engine::general_purpose;
 use pubky::PubkyClient;
 use hex;
 use hex::ToHex;
-use serde::Serialize;
 use url::Url;
 use tokio;
-use pkarr::{PkarrClient, SignedPacket, Keypair, dns, PublicKey};
+use pkarr::{SignedPacket, dns, PublicKey};
 use pkarr::dns::rdata::{RData, HTTPS, SVCB};
 use pkarr::dns::{Packet, ResourceRecord};
 use serde_json::json;
-use utils::*;
 use once_cell::sync::Lazy;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -622,7 +619,7 @@ pub fn decrypt_recovery_file(recovery_file: String, passphrase: String) -> Vec<S
     };
     let keypair = match PubkyClient::decrypt_recovery_file(&recovery_file_bytes, &passphrase) {
         Ok(keypair) => keypair,
-        Err(error) => return create_response_vector(true, "Failed to decrypt recovery file".to_string()),
+        Err(_) => return create_response_vector(true, "Failed to decrypt recovery file".to_string()),
     };
     let secret_key = get_secret_key_from_keypair(&keypair);
     create_response_vector(false, secret_key)
