@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use serde_json::json;
-use base64::{engine::general_purpose, Engine};
 use pkarr::dns::rdata::RData;
 use pkarr::dns::ResourceRecord;
 

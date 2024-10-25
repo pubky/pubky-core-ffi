@@ -91,7 +91,7 @@ pub fn decrypt_recovery_file(recovery_file: &str, passphrase: &str) -> Vec<Strin
     };
     let keypair = match PubkyClient::decrypt_recovery_file(&recovery_file_bytes, &passphrase) {
         Ok(keypair) => keypair,
-        Err(error) => return create_response_vector(true, "Failed to decrypt recovery file".to_string()),
+        Err(_) => return create_response_vector(true, "Failed to decrypt recovery file".to_string()),
     };
     let secret_key = get_secret_key_from_keypair(&keypair);
     create_response_vector(false, secret_key)
