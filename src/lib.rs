@@ -67,7 +67,7 @@ pub fn get_pubky_client() -> Arc<PubkyClient> {
 #[uniffi::export]
 pub fn switch_network(use_testnet: bool) -> Vec<String> {
     NETWORK_CLIENT.switch_network(use_testnet);
-    create_response_vector(false, format!("Switched to {} network", if use_testnet { "testnet" } else { "mainnet" }))
+    create_response_vector(false, format!("Switched to {} network", if use_testnet { "testnet" } else { "default" }))
 }
 
 static TOKIO_RUNTIME: Lazy<Arc<Runtime>> = Lazy::new(|| {

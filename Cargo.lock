@@ -1333,6 +1333,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "pubkymobile"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "hex",
+ "once_cell",
+ "pkarr",
+ "pubky",
+ "pubky-common",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "uniffi",
+ "url",
+]
+
+[[package]]
 name = "publicsuffix"
 version = "2.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1427,24 +1445,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
-]
-
-[[package]]
-name = "react_native_pubky"
-version = "0.1.0"
-dependencies = [
- "base64",
- "hex",
- "once_cell",
- "pkarr",
- "pubky",
- "pubky-common",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
- "uniffi",
- "url",
 ]
 
 [[package]]

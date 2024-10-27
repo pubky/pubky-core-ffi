@@ -430,6 +430,8 @@ internal interface _UniFFILib : Library {
     ): RustBuffer.ByValue
     fun uniffi_pubkymobile_fn_func_sign_up(`secretKey`: RustBuffer.ByValue,`homeserver`: RustBuffer.ByValue,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_pubkymobile_fn_func_switch_network(`useTestnet`: Byte,_uniffi_out_err: RustCallStatus, 
+    ): RustBuffer.ByValue
     fun ffi_pubkymobile_rustbuffer_alloc(`size`: Int,_uniffi_out_err: RustCallStatus, 
     ): RustBuffer.ByValue
     fun ffi_pubkymobile_rustbuffer_from_bytes(`bytes`: ForeignBytes.ByValue,_uniffi_out_err: RustCallStatus, 
@@ -584,6 +586,8 @@ internal interface _UniFFILib : Library {
     ): Short
     fun uniffi_pubkymobile_checksum_func_sign_up(
     ): Short
+    fun uniffi_pubkymobile_checksum_func_switch_network(
+    ): Short
     fun uniffi_pubkymobile_checksum_method_eventlistener_on_event_occurred(
     ): Short
     fun ffi_pubkymobile_uniffi_contract_version(
@@ -663,6 +667,9 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
     if (lib.uniffi_pubkymobile_checksum_func_sign_up() != 58756.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_pubkymobile_checksum_func_switch_network() != 14054.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_pubkymobile_checksum_method_eventlistener_on_event_occurred() != 39865.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -672,6 +679,26 @@ private fun uniffiCheckApiChecksums(lib: _UniFFILib) {
 
 // Public interface members begin here.
 
+
+public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
+    override fun lift(value: Byte): Boolean {
+        return value.toInt() != 0
+    }
+
+    override fun read(buf: ByteBuffer): Boolean {
+        return lift(buf.get())
+    }
+
+    override fun lower(value: Boolean): Byte {
+        return if (value) 1.toByte() else 0.toByte()
+    }
+
+    override fun allocationSize(value: Boolean) = 1
+
+    override fun write(value: Boolean, buf: ByteBuffer) {
+        buf.put(lower(value))
+    }
+}
 
 public object FfiConverterString: FfiConverter<String, RustBuffer.ByValue> {
     // Note: we don't inherit from FfiConverterRustBuffer, because we use a
@@ -1286,6 +1313,14 @@ fun `signUp`(`secretKey`: String, `homeserver`: String): List<String> {
     return FfiConverterSequenceString.lift(
     rustCall() { _status ->
     _UniFFILib.INSTANCE.uniffi_pubkymobile_fn_func_sign_up(FfiConverterString.lower(`secretKey`),FfiConverterString.lower(`homeserver`),_status)
+})
+}
+
+
+fun `switchNetwork`(`useTestnet`: Boolean): List<String> {
+    return FfiConverterSequenceString.lift(
+    rustCall() { _status ->
+    _UniFFILib.INSTANCE.uniffi_pubkymobile_fn_func_switch_network(FfiConverterBoolean.lower(`useTestnet`),_status)
 })
 }
 
