@@ -297,6 +297,27 @@ private func uniffiCheckCallStatus(
 // Public interface members begin here.
 
 
+fileprivate struct FfiConverterBool : FfiConverter {
+    typealias FfiType = Int8
+    typealias SwiftType = Bool
+
+    public static func lift(_ value: Int8) throws -> Bool {
+        return value != 0
+    }
+
+    public static func lower(_ value: Bool) -> Int8 {
+        return value ? 1 : 0
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Bool {
+        return try lift(readInt(&buf))
+    }
+
+    public static func write(_ value: Bool, into buf: inout [UInt8]) {
+        writeInt(&buf, lower(value))
+    }
+}
+
 fileprivate struct FfiConverterString: FfiConverter {
     typealias SwiftType = String
     typealias FfiType = RustBuffer
@@ -778,6 +799,15 @@ public func signUp(secretKey: String, homeserver: String)  -> [String] {
     )
 }
 
+public func switchNetwork(useTestnet: Bool)  -> [String] {
+    return try!  FfiConverterSequenceString.lift(
+        try! rustCall() {
+    uniffi_pubkymobile_fn_func_switch_network(
+        FfiConverterBool.lower(useTestnet),$0)
+}
+    )
+}
+
 private enum InitializationResult {
     case ok
     case contractVersionMismatch
@@ -851,6 +881,9 @@ private var initializationResult: InitializationResult {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_pubkymobile_checksum_func_sign_up() != 58756) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_pubkymobile_checksum_func_switch_network() != 14054) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_pubkymobile_checksum_method_eventlistener_on_event_occurred() != 39865) {

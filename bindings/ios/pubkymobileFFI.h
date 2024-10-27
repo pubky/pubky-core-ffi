@@ -109,6 +109,8 @@ RustBuffer uniffi_pubkymobile_fn_func_sign_out(RustBuffer secret_key, RustCallSt
 );
 RustBuffer uniffi_pubkymobile_fn_func_sign_up(RustBuffer secret_key, RustBuffer homeserver, RustCallStatus *_Nonnull out_status
 );
+RustBuffer uniffi_pubkymobile_fn_func_switch_network(int8_t use_testnet, RustCallStatus *_Nonnull out_status
+);
 RustBuffer ffi_pubkymobile_rustbuffer_alloc(int32_t size, RustCallStatus *_Nonnull out_status
 );
 RustBuffer ffi_pubkymobile_rustbuffer_from_bytes(ForeignBytes bytes, RustCallStatus *_Nonnull out_status
@@ -281,6 +283,9 @@ uint16_t uniffi_pubkymobile_checksum_func_sign_out(void
     
 );
 uint16_t uniffi_pubkymobile_checksum_func_sign_up(void
+    
+);
+uint16_t uniffi_pubkymobile_checksum_func_switch_network(void
     
 );
 uint16_t uniffi_pubkymobile_checksum_method_eventlistener_on_event_occurred(void
