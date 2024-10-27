@@ -245,11 +245,11 @@ func createRecoveryFile(secretKey: String, passphrase: String) throws -> String 
 ```
 
 ```kotlin
-// iOS
-func createRecoveryFile(secretKey: String, passphrase: String) throws -> String {
-    let result = try createRecoveryFile(secretKey: secretKey, passphrase: passphrase)
-    if result[0] == "error" {
-        throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
+// Android
+fun createRecoveryFile(secretKey: String, passphrase: String): String {
+    val result = createRecoveryFile(secretKey, passphrase)
+    if (result[0] == "error") {
+        throw Exception(result[1])
     }
     return result[1]
 }
