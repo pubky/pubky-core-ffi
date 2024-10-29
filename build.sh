@@ -8,11 +8,14 @@ case "$1" in
   "android")
     ./build_android.sh
     ;;
+  "python")
+    ./build_python.sh
+    ;;
   "all")
-    ./build_ios.sh && ./build_android.sh
+    ./build_ios.sh && ./build_android.sh && ./build_python.sh
     ;;
   *)
-    echo "Usage: $0 {ios|android|all}"
+    echo "Usage: $0 {ios|android|python|all}"
     exit 1
     ;;
 esac

@@ -1333,7 +1333,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pubkymobile"
+name = "pubkycore"
 version = "0.1.0"
 dependencies = [
  "base64",

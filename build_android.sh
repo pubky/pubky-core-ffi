@@ -55,7 +55,7 @@ cargo ndk \
 
 # Generate Kotlin bindings
 echo "Generating Kotlin bindings..."
-LIBRARY_PATH="./target/release/libpubkymobile.dylib"
+LIBRARY_PATH="./target/release/libpubkycore.dylib"
 
 # Check if the library file exists
 if [ ! -f "$LIBRARY_PATH" ]; then
@@ -76,7 +76,7 @@ cargo run --bin uniffi-bindgen generate \
 
 # Move the Kotlin file from the nested directory to the final location
 echo "Moving Kotlin file to final location..."
-find "$TMP_DIR" -name "pubkymobile.kt" -exec mv {} "$BASE_DIR/" \;
+find "$TMP_DIR" -name "pubkycore.kt" -exec mv {} "$BASE_DIR/" \;
 
 # Clean up temp directory and any remaining uniffi directories
 echo "Cleaning up temporary files..."
@@ -84,7 +84,7 @@ rm -rf "$TMP_DIR"
 rm -rf "$BASE_DIR/uniffi"
 
 # Verify the file was moved correctly
-if [ ! -f "$BASE_DIR/pubkymobile.kt" ]; then
+if [ ! -f "$BASE_DIR/pubkycore.kt" ]; then
     echo "Error: Kotlin bindings were not moved correctly"
     echo "Contents of $BASE_DIR:"
     ls -la "$BASE_DIR"
