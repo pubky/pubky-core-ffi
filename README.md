@@ -19,6 +19,11 @@ The Pubky Core Mobile SDK provides native bindings for iOS and Android platforms
 ./build.sh android
 ```
 
+### To build only Python bindings:
+```
+./build.sh python
+```
+
 ## Run Tests:
 ```
 cargo test -- --test-threads=1
@@ -29,19 +34,18 @@ cargo test -- --test-threads=1
 ### Installation
 1. Add the XCFramework to your Xcode project:
 
-   - Drag bindings/ios/PubkyMobile.xcframework into your Xcode project
+   - Drag bindings/ios/PubkyCore.xcframework into your Xcode project
 Ensure "Copy items if needed" is checked
 Add the framework to your target
 
 
 2. Copy the Swift bindings:
 
-   - Add bindings/ios/pubkymobile.swift to your project
+   - Add bindings/ios/pubkycore.swift to your project
 
 ### Basic Usage
 ```swift
-import PubkyMobile
-import PubkyMobile
+import PubkyCore
 
 class PubkyManager {
     // Generate a new secret key
@@ -125,14 +129,14 @@ class ViewController: UIViewController {
 
 2. Add the Kotlin bindings:
 
-   - Copy bindings/android/pubkymobile.kt to your project's source directory
+   - Copy bindings/android/pubkycore.kt to your project's source directory
 
 ### Basic Usage
 ```kotlin
 class PubkyManager {
     init {
         // Initialize the library
-        System.loadLibrary("pubkymobile")
+        System.loadLibrary("pubkycore")
     }
     
     fun generateNewAccount(): String {

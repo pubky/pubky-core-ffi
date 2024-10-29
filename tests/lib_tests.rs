@@ -1,4 +1,4 @@
-use pubkymobile::*;
+use pubkycore::*;
 use tokio;
 use base64;
 
