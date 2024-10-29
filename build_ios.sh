@@ -18,7 +18,7 @@ export IPHONEOS_DEPLOYMENT_TARGET=13.4
 
 # Cargo Build
 echo "Building Rust libraries..."
-cargo build && cd pubky && cargo build && cd pubky && cargo build && cd ../ && cd pubky-common && cargo build && cd ../ && cd pubky-homeserver && cargo build && cd ../../
+cargo build
 
 # Modify Cargo.toml
 echo "Updating Cargo.toml..."
