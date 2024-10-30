@@ -23,7 +23,7 @@ cargo build
 
 # Modify Cargo.toml to ensure correct crate type
 echo "Updating Cargo.toml..."
-sed -i '' 's/crate_type = .*/crate_type = ["cdylib"]/' Cargo.toml
+sed -i  's/crate_type = .*/crate_type = ["cdylib"]/' Cargo.toml
 
 # Build release
 echo "Building release version..."
@@ -31,7 +31,30 @@ cargo build --release
 
 # Generate Python bindings
 echo "Generating Python bindings..."
-LIBRARY_PATH="./target/release/libpubkycore.dylib"
+
+# Determine library name based on platform
+case "$(uname)" in
+    "Darwin")
+        LIBRARY_PATH="./target/release/libpubkycore.dylib"
+        LIBRARY_NAME="libpubkycore.dylib"
+        ;;
+    "Linux")
+        LIBRARY_PATH="./target/release/libpubkycore.so"
+        LIBRARY_NAME="libpubkycore.so"
+        ;;
+    "MINGW"*|"MSYS"*|"CYGWIN"*)
+        LIBRARY_PATH="./target/release/pubkycore.dll"
+        LIBRARY_NAME="pubkycore.dll"
+        ;;
+    *)
+        echo "Unsupported platform: $(uname)"
+        exit 1
+        ;;
+esac
+
+# Debug information
+echo "Looking for library in target/release directory..."
+ls -la ./target/release/
 
 # Check if the library file exists
 if [ ! -f "$LIBRARY_PATH" ]; then
@@ -46,6 +69,14 @@ cargo run --bin uniffi-bindgen generate \
     --library "$LIBRARY_PATH" \
     --language python \
     --out-dir "$PACKAGE_DIR"
+
+# Format Python code if yapf is available
+if command -v yapf >/dev/null 2>&1; then
+    echo "Formatting Python code with yapf..."
+    yapf -i "$PACKAGE_DIR"/*.py
+else
+    echo "Note: yapf not found. Skipping Python code formatting."
+fi
 
 # Create __init__.py
 touch "$PACKAGE_DIR/__init__.py"
