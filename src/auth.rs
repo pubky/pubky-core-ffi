@@ -43,34 +43,38 @@ pub fn parse_pubky_auth_url(url_str: &str) -> Result<PubkyAuthDetails, String> {
         .cloned()
         .ok_or_else(|| "Missing relay".to_string())?;
 
-    let capabilities_str = query_params
-        .get("capabilities")
-        .or_else(|| query_params.get("caps"))
-        .cloned()
-        .ok_or_else(|| "Missing capabilities".to_string())?;
-
     let secret = query_params
         .get("secret")
         .cloned()
         .ok_or_else(|| "Missing secret".to_string())?;
 
+    let capabilities_str = query_params
+        .get("capabilities")
+        .or_else(|| query_params.get("caps"))
+        .cloned()
+        .unwrap_or_default();
+
     // Parse capabilities
-    let capabilities = capabilities_str
-        .split(',')
-        .map(|capability| {
-            let mut parts = capability.splitn(2, ':');
-            let path = parts
-                .next()
-                .ok_or_else(|| format!("Invalid capability format in '{}'", capability))?;
-            let permission = parts
-                .next()
-                .ok_or_else(|| format!("Invalid capability format in '{}'", capability))?;
-            Ok(Capability {
-                path: path.to_string(),
-                permission: permission.to_string(),
+    let capabilities = if capabilities_str.is_empty() {
+        Vec::new()
+    } else {
+        capabilities_str
+            .split(',')
+            .map(|capability| {
+                let mut parts = capability.splitn(2, ':');
+                let path = parts
+                    .next()
+                    .ok_or_else(|| format!("Invalid capability format in '{}'", capability))?;
+                let permission = parts
+                    .next()
+                    .ok_or_else(|| format!("Invalid capability format in '{}'", capability))?;
+                Ok(Capability {
+                    path: path.to_string(),
+                    permission: permission.to_string(),
+                })
             })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
+            .collect::<Result<Vec<_>, String>>()?
+    };
 
     Ok(PubkyAuthDetails {
         relay,
