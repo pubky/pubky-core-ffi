@@ -23,7 +23,13 @@ cargo build
 
 # Modify Cargo.toml to ensure correct crate type
 echo "Updating Cargo.toml..."
-sed -i  's/crate_type = .*/crate_type = ["cdylib"]/' Cargo.toml
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    sed -i '' 's/crate_type = .*/crate_type = ["cdylib"]/' Cargo.toml
+else
+    # Linux and others
+    sed -i 's/crate_type = .*/crate_type = ["cdylib"]/' Cargo.toml
+fi
 
 # Build release
 echo "Building release version..."
