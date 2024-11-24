@@ -173,17 +173,7 @@ pub fn session(pubky: String) -> Vec<String> {
             None => return create_response_vector(true, "No session returned".to_string()),
         };
 
-        let json_obj = json!({
-            "pubky": session.pubky().to_string(),
-            "capabilities": session.capabilities().iter().map(|c| c.to_string()).collect::<Vec<String>>(),
-        });
-
-        let json_str = match serde_json::to_string(&json_obj) {
-            Ok(json) => json,
-            Err(e) => return create_response_vector(true, format!("Failed to serialize JSON: {}", e)),
-        };
-
-        create_response_vector(false, json_str)
+        create_response_vector(false, session_to_json(&session))
     })
 }
 
@@ -377,7 +367,9 @@ pub fn sign_up(secret_key: String, homeserver: String) -> Vec<String> {
         };
 
         match client.signup(&keypair, &homeserver_public_key).await {
-            Ok(session) => create_response_vector(false, session.pubky().to_string()),
+            Ok(session) => {
+                create_response_vector(false, session_to_json(&session))
+            },
             Err(error) => create_response_vector(true, format!("signup failure: {}", error)),
         }
     })
@@ -393,7 +385,9 @@ pub fn sign_in(secret_key: String) -> Vec<String> {
             Err(error) => return create_response_vector(true, error),
         };
         match client.signin(&keypair).await {
-            Ok(_) => create_response_vector(false, "Sign in success".to_string()),
+            Ok(session) => {
+                create_response_vector(false, session_to_json(&session))
+            },
             Err(error) => {
                 create_response_vector(true, format!("Failed to sign in: {}", error))
             }

@@ -3,6 +3,7 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 use serde_json::json;
 use pkarr::dns::rdata::RData;
 use pkarr::dns::ResourceRecord;
+use pubky_common::session::Session;
 
 pub fn create_response_vector(error: bool, data: String) -> Vec<String> {
     if error {
@@ -240,4 +241,13 @@ pub fn get_list_url(full_url: &str) -> Option<String> {
         // "pub/" not found in the string
         None
     }
+}
+
+pub fn session_to_json(session: &Session) -> String {
+    let json_obj = json!({
+        "pubky": session.pubky().to_string(),
+        "capabilities": session.capabilities().iter().map(|c| c.to_string()).collect::<Vec<String>>(),
+    });
+
+    serde_json::to_string(&json_obj).unwrap_or_else(|e| format!("Failed to serialize JSON: {}", e))
 }
