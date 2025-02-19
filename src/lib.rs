@@ -2,6 +2,7 @@ mod types;
 mod keypair;
 mod auth;
 mod utils;
+mod tests;
 
 pub use types::*;
 pub use keypair::*;
@@ -13,7 +14,7 @@ uniffi::setup_scaffolding!();
 use std::str;
 use base64::Engine;
 use base64::engine::general_purpose;
-use pubky::PubkyClient;
+use pubky::{Client};
 use hex;
 use hex::ToHex;
 use url::Url;
@@ -24,43 +25,43 @@ use pkarr::dns::{Packet, ResourceRecord};
 use serde_json::json;
 use once_cell::sync::Lazy;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use pkarr::bytes::Bytes;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use pubky_common::recovery_file;
 use pubky_common::session::Session;
+use pubky_common::timestamp::Timestamp;
 use tokio::runtime::Runtime;
 use tokio::time;
 
 pub struct NetworkClient {
-    client: Mutex<Arc<PubkyClient>>,
+    client: Mutex<Arc<Client>>,
 }
 
 impl NetworkClient {
     fn new() -> Self {
         Self {
-            client: Mutex::new(Arc::new(PubkyClient::default()))
+            client: Mutex::new(Arc::new(Client::builder().build().unwrap())),
         }
     }
 
     pub fn switch_network(&self, use_testnet: bool) {
         let new_client = if use_testnet {
-            Arc::new(PubkyClient::testnet())
+            Arc::new(Client::builder().testnet().build().unwrap())
         } else {
-            Arc::new(PubkyClient::default())
+            Arc::new(Client::builder().build().unwrap())
         };
 
         let mut client = self.client.lock().unwrap();
         *client = new_client;
     }
 
-    pub fn get_client(&self) -> Arc<PubkyClient> {
+    pub fn get_client(&self) -> Arc<Client> {
         self.client.lock().unwrap().clone()
     }
 }
 
 static NETWORK_CLIENT: Lazy<NetworkClient> = Lazy::new(|| NetworkClient::new());
 
-// Replace the old PUBKY_CLIENT with this
-pub fn get_pubky_client() -> Arc<PubkyClient> {
+pub fn get_pubky_client() -> Arc<Client> {
     NETWORK_CLIENT.get_client()
 }
 
@@ -148,7 +149,7 @@ pub fn delete_file(url: String) -> Vec<String> {
             Ok(url) => url,
             Err(_) => return create_response_vector(true, "Failed to parse URL".to_string()),
         };
-        match client.delete(parsed_url).await {
+        match client.delete(parsed_url).send().await {
             Ok(_) => create_response_vector(false, "Deleted successfully".to_string()),
             Err(error) => create_response_vector(true, format!("Failed to delete: {}", error)),
         }
@@ -252,12 +253,11 @@ pub fn publish_https(record_name: String, target: String, secret_key: String) ->
             dns::rdata::RData::HTTPS(https_record),
         ));
 
-        let signed_packet = match SignedPacket::from_packet(&keypair, &packet) {
+        let signed_packet = match SignedPacket::new(&keypair, &packet.answers, Timestamp::now()) {
             Ok(signed_packet) => signed_packet,
             Err(e) => return create_response_vector(true, format!("Failed to create signed packet: {}", e)),
         };
-
-        match client.pkarr().publish(&signed_packet).await {
+        match client.pkarr().publish(&signed_packet, Some(Timestamp::now())).await {
             Ok(()) => create_response_vector(false, keypair.public_key().to_string()),
             Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
         }
@@ -276,9 +276,9 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
         let client = get_pubky_client();
 
         match client.pkarr().resolve(&public_key).await {
-            Ok(Some(signed_packet)) => {
+            Some(signed_packet) => {
                 // Extract HTTPS records from the signed packet
-                let https_records: Vec<serde_json::Value> = signed_packet.packet().answers.iter()
+                let https_records: Vec<serde_json::Value> = signed_packet.all_resource_records()
                     .filter_map(|record| {
                         if let dns::rdata::RData::HTTPS(https) = &record.rdata {
                             // Create a JSON object
@@ -345,8 +345,7 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
 
                 create_response_vector(false, json_str)
             },
-            Ok(None) => create_response_vector(true, "No signed packet found".to_string()),
-            Err(e) => create_response_vector(true, format!("Failed to resolve: {}", e)),
+            None => create_response_vector(true, "No signed packet found".to_string()),
         }
     })
 }
@@ -416,6 +415,7 @@ pub fn sign_out(secret_key: String) -> Vec<String> {
 #[uniffi::export]
 pub fn put(url: String, content: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
+    let content_bytes = content.into_bytes();
     runtime.block_on(async {
         let client = get_pubky_client();
         let trimmed_url = url.trim_end_matches('/');
@@ -423,7 +423,10 @@ pub fn put(url: String, content: String) -> Vec<String> {
             Ok(url) => url,
             Err(_) => return create_response_vector(true, "Failed to parse URL".to_string()),
         };
-        match client.put(parsed_url, &content.as_bytes()).await {
+        match client.put(parsed_url)
+            .body(content_bytes)
+            .send()
+            .await {
             Ok(_) => create_response_vector(false, trimmed_url.to_string()),
             Err(error) => {
                 create_response_vector(true, format!("Failed to put: {}", error))
@@ -442,13 +445,13 @@ pub fn get(url: String) -> Vec<String> {
             Ok(url) => url,
             Err(_) => return create_response_vector(true, "Failed to parse URL".to_string()),
         };
-        let result: Option<Bytes> = match client.get(parsed_url).await {
+        let response = match client.get(parsed_url).send().await {
             Ok(res) => res,
             Err(_) => return create_response_vector(true, "Request failed".to_string()),
         };
-        let bytes = match result {
-            Some(bytes) => bytes,
-            None => return create_response_vector(true, "No data returned".to_string()),
+        let bytes = match response.bytes().await {
+            Ok(b) => b,
+            Err(_) => return create_response_vector(true, "Failed to read response body".to_string()),
         };
         let string = match str::from_utf8(&bytes) {
             Ok(s) => s.to_string(),
@@ -475,9 +478,8 @@ pub fn resolve(public_key: String) -> Vec<String> {
         let client = get_pubky_client();
 
         match client.pkarr().resolve(&public_key).await {
-            Ok(Some(signed_packet)) => {
-                // Collect references to ResourceRecords from the signed packet's answers
-                let all_records: Vec<&ResourceRecord> = signed_packet.packet().answers.iter().collect();
+            Some(signed_packet) => {
+                let all_records: Vec<_> = signed_packet.all_resource_records().collect();
                 // Convert each ResourceRecord to a JSON value, handling errors appropriately
                 let json_records: Vec<serde_json::Value> = all_records
                     .iter()
@@ -514,11 +516,8 @@ pub fn resolve(public_key: String) -> Vec<String> {
 
                 create_response_vector(false, json_str)
             },
-            Ok(None) => {
+            None => {
                 create_response_vector(true, "No signed packet found".to_string())
-            }
-            Err(e) => {
-                create_response_vector(true, format!("Failed to resolve: {}", e))
             }
         }
     })
@@ -558,9 +557,9 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
             txt_record,
         ));
 
-        match SignedPacket::from_packet(&keypair, &packet) {
+        match SignedPacket::new(&keypair, &packet.answers, Timestamp::now()) {
             Ok(signed_packet) => {
-                match client.pkarr().publish(&signed_packet).await {
+                match client.pkarr().publish(&signed_packet, Some(Timestamp::now())).await {
                     Ok(()) => {
                         create_response_vector(false, keypair.public_key().to_string())
                     }
@@ -630,10 +629,7 @@ pub fn create_recovery_file(secret_key: String, passphrase: String,) -> Vec<Stri
         Ok(keypair) => keypair,
         Err(error) => return create_response_vector(true, error),
     };
-    let recovery_file_bytes = match PubkyClient::create_recovery_file(&keypair, &passphrase) {
-        Ok(bytes) => bytes,
-        Err(_) => return create_response_vector(true, "Failed to create recovery file".to_string()),
-    };
+    let recovery_file_bytes = recovery_file::create_recovery_file(&keypair, &passphrase);
     let recovery_file = base64::encode(&recovery_file_bytes);
     create_response_vector(false, recovery_file)
 }
@@ -647,7 +643,7 @@ pub fn decrypt_recovery_file(recovery_file: String, passphrase: String) -> Vec<S
         Ok(bytes) => bytes,
         Err(error) => return create_response_vector(true, format!("Failed to decode recovery file: {}", error)),
     };
-    let keypair = match PubkyClient::decrypt_recovery_file(&recovery_file_bytes, &passphrase) {
+    let keypair = match recovery_file::decrypt_recovery_file(&recovery_file_bytes, &passphrase) {
         Ok(keypair) => keypair,
         Err(_) => return create_response_vector(true, "Failed to decrypt recovery file".to_string()),
     };
