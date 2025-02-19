@@ -56,7 +56,7 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "type": "CAA",
                 "flag": caa.flag,
                 "tag": caa.tag.to_string(),
-                "value": caa.value.to_string()
+                "value": base64::encode(&caa.value)
             })
         },
         RData::HINFO(hinfo) => {
