@@ -249,4 +249,20 @@ mod tests {
         let recovery_result = create_recovery_file("".to_string(), "passphrase".to_string());
         assert_eq!(recovery_result[0], "error");
     }
+
+    #[test]
+    fn test_republish_homeserver() {
+        let (_, secret_key, homeserver) = get_test_setup();
+
+        // First sign up to ensure the user exists
+        let sign_up_result = sign_up(secret_key.clone(), homeserver.clone(), None);
+        println!("Sign up result: {:?}", sign_up_result);
+        assert_eq!(sign_up_result[0], "success");
+
+        // Test republish homeserver
+        let republish_result = republish_homeserver(secret_key, homeserver);
+        println!("Republish homeserver result: {:?}", republish_result);
+        assert_eq!(republish_result[0], "success");
+        assert_eq!(republish_result[1], "Homeserver republished successfully");
+    }
 }

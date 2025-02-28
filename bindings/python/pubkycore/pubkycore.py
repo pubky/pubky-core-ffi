@@ -532,6 +532,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_remove_event_listener() != 23534:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_republish_homeserver() != 63919:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_resolve() != 34317:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_resolve_https() != 17266:
@@ -642,6 +644,12 @@ _UniffiLib.uniffi_pubkycore_fn_func_remove_event_listener.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_remove_event_listener.restype = None
+_UniffiLib.uniffi_pubkycore_fn_func_republish_homeserver.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_republish_homeserver.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_resolve.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -985,6 +993,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_put.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_remove_event_listener.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_remove_event_listener.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_republish_homeserver.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_republish_homeserver.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_resolve.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_resolve.restype = ctypes.c_uint16
@@ -1403,6 +1414,14 @@ def remove_event_listener():
     _rust_call(_UniffiLib.uniffi_pubkycore_fn_func_remove_event_listener,)
 
 
+def republish_homeserver(secret_key: "str",homeserver: "str") -> "typing.List[str]":
+    
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_republish_homeserver,
+        _UniffiConverterString.lower(secret_key),
+        _UniffiConverterString.lower(homeserver)))
+
+
 def resolve(public_key: "str") -> "typing.List[str]":
     
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_resolve,
@@ -1471,6 +1490,7 @@ __all__ = [
     "publish_https",
     "put",
     "remove_event_listener",
+    "republish_homeserver",
     "resolve",
     "resolve_https",
     "session",

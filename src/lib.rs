@@ -397,6 +397,28 @@ pub fn sign_up(secret_key: String, homeserver: String, signup_token: Option<Stri
 }
 
 #[uniffi::export]
+pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+        let keypair = match get_keypair_from_secret_key(&secret_key) {
+            Ok(keypair) => keypair,
+            Err(error) => return create_response_vector(true, error),
+        };
+
+        let homeserver_public_key = match PublicKey::try_from(homeserver) {
+            Ok(key) => key,
+            Err(error) => return create_response_vector(true, format!("Invalid homeserver public key: {}", error)),
+        };
+
+        match client.republish_homeserver(&keypair, homeserver_public_key.to_string().as_str()).await {
+            Ok(_) => create_response_vector(false, "Homeserver republished successfully".to_string()),
+            Err(error) => create_response_vector(true, format!("Failed to republish homeserver: {}", error)),
+        }
+    })
+}
+
+#[uniffi::export]
 pub fn sign_in(secret_key: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
