@@ -518,6 +518,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_get_public_key_from_secret_key() != 40316:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_get_signup_token() != 47927:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_list() != 43198:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_parse_auth_url() != 27379:
@@ -542,7 +544,7 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_sign_out() != 34903:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
-    if lib.uniffi_pubkycore_checksum_func_sign_up() != 37999:
+    if lib.uniffi_pubkycore_checksum_func_sign_up() != 48789:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_switch_network() != 64215:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -600,6 +602,12 @@ _UniffiLib.uniffi_pubkycore_fn_func_get_public_key_from_secret_key.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_get_public_key_from_secret_key.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_get_signup_token.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_get_signup_token.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_list.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -665,6 +673,7 @@ _UniffiLib.uniffi_pubkycore_fn_func_sign_out.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_fn_func_sign_out.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_sign_up.argtypes = (
+    _UniffiRustBuffer,
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -955,6 +964,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_get.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_get_public_key_from_secret_key.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_get_public_key_from_secret_key.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_get_signup_token.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_get_signup_token.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_list.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_list.restype = ctypes.c_uint16
@@ -1253,6 +1265,28 @@ _UniffiConverterCallbackInterfaceEventListener = _UniffiConverterCallbackInterfa
 
 
 
+class _UniffiConverterOptionalString(_UniffiConverterRustBuffer):
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterString.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterString.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
     @classmethod
     def write(cls, value, buf):
@@ -1315,6 +1349,14 @@ def get_public_key_from_secret_key(secret_key: "str") -> "typing.List[str]":
     
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_get_public_key_from_secret_key,
         _UniffiConverterString.lower(secret_key)))
+
+
+def get_signup_token(homeserver_pubky: "str",admin_password: "str") -> "typing.List[str]":
+    
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_get_signup_token,
+        _UniffiConverterString.lower(homeserver_pubky),
+        _UniffiConverterString.lower(admin_password)))
 
 
 def list(url: "str") -> "typing.List[str]":
@@ -1397,12 +1439,14 @@ def sign_out(secret_key: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(secret_key)))
 
 
-def sign_up(secret_key: "str",homeserver: "str") -> "typing.List[str]":
+def sign_up(secret_key: "str",homeserver: "str",signup_token: "typing.Optional[str]") -> "typing.List[str]":
+    
     
     
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_sign_up,
         _UniffiConverterString.lower(secret_key),
-        _UniffiConverterString.lower(homeserver)))
+        _UniffiConverterString.lower(homeserver),
+        _UniffiConverterOptionalString.lower(signup_token)))
 
 
 def switch_network(use_testnet: "bool") -> "typing.List[str]":
@@ -1420,6 +1464,7 @@ __all__ = [
     "generate_secret_key",
     "get",
     "get_public_key_from_secret_key",
+    "get_signup_token",
     "list",
     "parse_auth_url",
     "publish",

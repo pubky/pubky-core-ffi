@@ -28,7 +28,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use pubky_common::recovery_file;
 use pubky_common::session::Session;
-use pubky_common::timestamp::Timestamp;
+use ntimestamp::Timestamp;
 use tokio::runtime::Runtime;
 use tokio::time;
 
@@ -351,7 +351,29 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
 }
 
 #[uniffi::export]
-pub fn sign_up(secret_key: String, homeserver: String) -> Vec<String> {
+pub fn get_signup_token(homeserver_pubky: String, admin_password: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+
+        let response = match client
+            .get(&format!("https://{homeserver_pubky}/admin/generate_signup_token"))
+            .header("X-Admin-Password", admin_password)
+            .send()
+            .await {
+            Ok(res) => res,
+            Err(error) => return create_response_vector(true, format!("Failed to get signup token: {}", error)),
+        };
+
+        match response.text().await {
+            Ok(signup_token) => create_response_vector(false, signup_token),
+            Err(error) => create_response_vector(true, format!("Failed to read signup token: {}", error)),
+        }
+    })
+}
+
+#[uniffi::export]
+pub fn sign_up(secret_key: String, homeserver: String, signup_token: Option<String>) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let client = get_pubky_client();
@@ -365,7 +387,7 @@ pub fn sign_up(secret_key: String, homeserver: String) -> Vec<String> {
             Err(error) => return create_response_vector(true, format!("Invalid homeserver public key: {}", error)),
         };
 
-        match client.signup(&keypair, &homeserver_public_key).await {
+        match client.signup(&keypair, &homeserver_public_key, signup_token.as_deref()).await {
             Ok(session) => {
                 create_response_vector(false, session_to_json(&session))
             },

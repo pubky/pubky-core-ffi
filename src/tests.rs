@@ -47,7 +47,7 @@ mod tests {
         let url = format!("pubky://{}/pub/test.com/testfile", public_key);
         let content = "test content".to_string();
 
-        let sign_up_result = sign_up(secret_key, homeserver);
+        let sign_up_result = sign_up(secret_key, homeserver, None);
        // assert_eq!(sign_up_result[0], "success");
 
         let inner_url = url.clone();
@@ -151,7 +151,7 @@ mod tests {
         let (_, secret_key, homeserver) = get_test_setup();
 
         // First sign up
-        let sign_up_result = sign_up(secret_key.clone(), homeserver);
+        let sign_up_result = sign_up(secret_key.clone(), homeserver, None);
         println!("Sign up result: {:?}", sign_up_result);
         assert_eq!(sign_up_result[0], "success");
 
@@ -170,7 +170,7 @@ mod tests {
         let (keypair, secret_key, homeserver) = get_test_setup();
 
         // First sign up
-        let sign_up_result = sign_up(secret_key.clone(), homeserver);
+        let sign_up_result = sign_up(secret_key.clone(), homeserver, None);
         println!("Sign up result: {:?}", sign_up_result);
         assert_eq!(sign_up_result[0], "success");
 
