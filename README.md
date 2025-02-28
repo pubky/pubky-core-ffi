@@ -59,9 +59,18 @@ class PubkyManager {
         return secretKey
     }
     
-    // Sign up with a homeserver
-    func signUp(secretKey: String, homeserver: String) async throws -> String {
-        let result = try signUp(secretKey: secretKey, homeserver: homeserver)
+    // Get a signup token
+    func getSignupToken(homeserverPubky: String, adminPassword: String) async throws -> String {
+        let result = try getSignupToken(homeserverPubky: homeserverPubky, adminPassword: adminPassword)
+        if result[0] == "error" {
+            throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
+        }
+        return result[1]
+    }
+    
+    // Sign up with a homeserver (with optional signup token)
+    func signUp(secretKey: String, homeserver: String, signupToken: String? = nil) async throws -> String {
+        let result = try signUp(secretKey: secretKey, homeserver: homeserver, signupToken: signupToken)
         if result[0] == "error" {
             throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
         }
@@ -100,6 +109,13 @@ class ViewController: UIViewController {
             
             // Sign up with homeserver
             let homeserver = "pubky://8pinxxgqs41n4aididenw5apqp1urfmzdztr8jt4abrkdn435ewo"
+            
+            // For servers requiring signup tokens
+            // let adminPassword = "your-admin-password"
+            // let signupToken = try await pubkyManager.getSignupToken(homeserverPubky: homeserver, adminPassword: adminPassword)
+            // let publicKey = try await pubkyManager.signUp(secretKey: secretKey, homeserver: homeserver, signupToken: signupToken)
+            
+            // For servers without token requirements
             let publicKey = try await pubkyManager.signUp(secretKey: secretKey, homeserver: homeserver)
             
             // Publish content
@@ -148,8 +164,16 @@ class PubkyManager {
         return json.getString("secret_key")
     }
     
-    suspend fun signUp(secretKey: String, homeserver: String): String {
-        val result = signUp(secretKey, homeserver)
+    suspend fun getSignupToken(homeserverPubky: String, adminPassword: String): String {
+        val result = getSignupToken(homeserverPubky, adminPassword)
+        if (result[0] == "error") {
+            throw Exception(result[1])
+        }
+        return result[1]
+    }
+    
+    suspend fun signUp(secretKey: String, homeserver: String, signupToken: String? = null): String {
+        val result = signUp(secretKey, homeserver, signupToken)
         if (result[0] == "error") {
             throw Exception(result[1])
         }
@@ -190,6 +214,13 @@ class MainActivity : AppCompatActivity() {
                 
                 // Sign up with homeserver
                 val homeserver = "pubky://8pinxxgqs41n4aididenw5apqp1urfmzdztr8jt4abrkdn435ewo"
+                
+                // For servers requiring signup tokens
+                // val adminPassword = "your-admin-password"
+                // val signupToken = pubkyManager.getSignupToken(homeserver, adminPassword)
+                // val publicKey = pubkyManager.signUp(secretKey, homeserver, signupToken)
+                
+                // For servers without token requirements
                 val publicKey = pubkyManager.signUp(secretKey, homeserver)
                 
                 // Publish content
@@ -229,6 +260,52 @@ func publishHttps(recordName: String, target: String, secretKey: String) async t
 // Android
 suspend fun publishHttps(recordName: String, target: String, secretKey: String): String {
     val result = publishHttps(recordName, target, secretKey)
+    if (result[0] == "error") {
+        throw Exception(result[1])
+    }
+    return result[1]
+}
+```
+
+### User Authentication with Signup Tokens
+
+For servers that require authentication control:
+
+```swift
+// iOS
+// 1. Admin generates a signup token
+func getServerSignupToken(homeserverPubky: String, adminPassword: String) async throws -> String {
+    let result = try getSignupToken(homeserverPubky: homeserverPubky, adminPassword: adminPassword)
+    if result[0] == "error" {
+        throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
+    }
+    return result[1]
+}
+
+// 2. User signs up with the token
+func signUpWithToken(secretKey: String, homeserver: String, token: String) async throws -> String {
+    let result = try signUp(secretKey: secretKey, homeserver: homeserver, signupToken: token)
+    if result[0] == "error" {
+        throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
+    }
+    return result[1]
+}
+```
+
+```kotlin
+// Android
+// 1. Admin generates a signup token
+suspend fun getServerSignupToken(homeserverPubky: String, adminPassword: String): String {
+    val result = getSignupToken(homeserverPubky, adminPassword)
+    if (result[0] == "error") {
+        throw Exception(result[1])
+    }
+    return result[1]
+}
+
+// 2. User signs up with the token
+suspend fun signUpWithToken(secretKey: String, homeserver: String, token: String): String {
+    val result = signUp(secretKey, homeserver, token)
     if (result[0] == "error") {
         throw Exception(result[1])
     }

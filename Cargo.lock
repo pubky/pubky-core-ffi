@@ -1322,9 +1322,9 @@ checksum = "227748d55f2f0ab4735d87fd623798cb6b664512fe979705f829c9f81c934465"
 
 [[package]]
 name = "mainline"
-version = "5.2.1"
+version = "5.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb915972046c6df12b1292ed24f7382ed21facd440f9f6ca9c38e0b702217009"
+checksum = "2fae24c3d129b92c8cfea92a9e2014052371a2835e4a6d66dfdb00238e389e56"
 dependencies = [
  "crc",
  "document-features",
@@ -1332,8 +1332,8 @@ dependencies = [
  "ed25519-dalek",
  "flume",
  "futures-lite",
+ "getrandom 0.2.15",
  "lru",
- "rand 0.9.0",
  "serde",
  "serde_bencode",
  "serde_bytes",
@@ -1407,6 +1407,21 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
+]
+
+[[package]]
+name = "ntimestamp"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c50f94c405726d3e0095e89e72f75ce7f6587b94a8bd8dc8054b73f65c0fd68c"
+dependencies = [
+ "base32",
+ "document-features",
+ "getrandom 0.2.15",
+ "httpdate",
+ "js-sys",
+ "once_cell",
+ "serde",
 ]
 
 [[package]]
@@ -1576,9 +1591,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkarr"
-version = "3.3.1"
+version = "3.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb8be2e97e822e41c6e254706e732e02ca2c49f4da038042c11d5a5e5961a164"
+checksum = "12b412ba762f89ba115076d8b5417d3582f4ef9a1956c8024c1e730c0edc4014"
 dependencies = [
  "async-compat",
  "base32",
@@ -1596,8 +1611,8 @@ dependencies = [
  "log",
  "lru",
  "mainline",
+ "ntimestamp",
  "page_size",
- "pubky-timestamp",
  "reqwest",
  "rustls",
  "rustls-webpki",
@@ -1684,9 +1699,9 @@ checksum = "33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac"
 
 [[package]]
 name = "pubky"
-version = "0.4.0"
+version = "0.4.2-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14aaef32224e91e9c48d28b964027bde8117a4d1814367aead651d94b332ee83"
+checksum = "e18e29c473b76315856f3d557949de975955d9d8710a746a8049060dbd9c8b55"
 dependencies = [
  "anyhow",
  "base64",
@@ -1716,9 +1731,9 @@ dependencies = [
 
 [[package]]
 name = "pubky-common"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77dddc23db4c39c39412fdede996c16e36c93aedfe61226913f389df118a9254"
+checksum = "3220bb556278535a375d4c155f1dfb4602ac1d54a3f79656291accf38ad864bc"
 dependencies = [
  "argon2",
  "base32",
@@ -1752,10 +1767,11 @@ dependencies = [
 
 [[package]]
 name = "pubkycore"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "base64",
  "hex",
+ "ntimestamp",
  "once_cell",
  "pkarr",
  "pubky",
