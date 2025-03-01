@@ -411,7 +411,7 @@ pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<Strin
             Err(error) => return create_response_vector(true, format!("Invalid homeserver public key: {}", error)),
         };
 
-        match client.republish_homeserver(&keypair, homeserver_public_key.to_string().as_str()).await {
+        match client.republish_homeserver(&keypair, &homeserver_public_key).await {
             Ok(_) => create_response_vector(false, "Homeserver republished successfully".to_string()),
             Err(error) => create_response_vector(true, format!("Failed to republish homeserver: {}", error)),
         }
