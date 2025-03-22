@@ -694,3 +694,20 @@ pub fn decrypt_recovery_file(recovery_file: String, passphrase: String) -> Vec<S
     let secret_key = get_secret_key_from_keypair(&keypair);
     create_response_vector(false, secret_key)
 }
+
+#[uniffi::export]
+pub fn get_homeserver(pubky: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+        let public_key = match PublicKey::try_from(pubky) {
+            Ok(key) => key,
+            Err(error) => return create_response_vector(true, format!("Invalid public key: {}", error)),
+        };
+
+        match client.get_homeserver(&public_key).await {
+            Some(homeserver) => create_response_vector(false, homeserver),
+            None => create_response_vector(true, "No homeserver found for this public key".to_string()),
+        }
+    })
+}

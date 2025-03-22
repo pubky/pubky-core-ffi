@@ -516,6 +516,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_get() != 6591:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_get_homeserver() != 40658:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_get_public_key_from_secret_key() != 40316:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_get_signup_token() != 47927:
@@ -599,6 +601,11 @@ _UniffiLib.uniffi_pubkycore_fn_func_get.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_get.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_get_homeserver.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_get_homeserver.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_get_public_key_from_secret_key.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -969,6 +976,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_generate_secret_key.restype = ctypes.c
 _UniffiLib.uniffi_pubkycore_checksum_func_get.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_get.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_get_homeserver.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_get_homeserver.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_get_public_key_from_secret_key.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_get_public_key_from_secret_key.restype = ctypes.c_uint16
@@ -1356,6 +1366,12 @@ def get(url: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(url)))
 
 
+def get_homeserver(pubky: "str") -> "typing.List[str]":
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_get_homeserver,
+        _UniffiConverterString.lower(pubky)))
+
+
 def get_public_key_from_secret_key(secret_key: "str") -> "typing.List[str]":
     
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_get_public_key_from_secret_key,
@@ -1482,6 +1498,7 @@ __all__ = [
     "delete_file",
     "generate_secret_key",
     "get",
+    "get_homeserver",
     "get_public_key_from_secret_key",
     "get_signup_token",
     "list",
