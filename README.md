@@ -35,8 +35,8 @@ cargo test -- --test-threads=1
 1. Add the XCFramework to your Xcode project:
 
    - Drag bindings/ios/PubkyCore.xcframework into your Xcode project
-Ensure "Copy items if needed" is checked
-Add the framework to your target
+     Ensure "Copy items if needed" is checked
+     Add the framework to your target
 
 
 2. Copy the Swift bindings:
@@ -71,6 +71,15 @@ class PubkyManager {
     // Sign up with a homeserver (with optional signup token)
     func signUp(secretKey: String, homeserver: String, signupToken: String? = nil) async throws -> String {
         let result = try signUp(secretKey: secretKey, homeserver: homeserver, signupToken: signupToken)
+        if result[0] == "error" {
+            throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
+        }
+        return result[1]
+    }
+    
+    // Get the homeserver for a Pubky public key
+    func getHomeserver(pubky: String) async throws -> String {
+        let result = try getHomeserver(pubky: pubky)
         if result[0] == "error" {
             throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
         }
@@ -128,6 +137,10 @@ class ViewController: UIViewController {
             )
             
             print("Published with public key: \(publishResult)")
+            
+            // Get homeserver for a public key
+            let foundHomeserver = try await pubkyManager.getHomeserver(pubky: publishResult)
+            print("Homeserver for this key: \(foundHomeserver)")
         } catch {
             print("Error: \(error.localizedDescription)")
         }
@@ -174,6 +187,14 @@ class PubkyManager {
     
     suspend fun signUp(secretKey: String, homeserver: String, signupToken: String? = null): String {
         val result = signUp(secretKey, homeserver, signupToken)
+        if (result[0] == "error") {
+            throw Exception(result[1])
+        }
+        return result[1]
+    }
+    
+    suspend fun getHomeserver(pubky: String): String {
+        val result = getHomeserver(pubky)
         if (result[0] == "error") {
             throw Exception(result[1])
         }
@@ -233,6 +254,10 @@ class MainActivity : AppCompatActivity() {
                 )
                 
                 Log.d("Pubky", "Published with public key: $publishResult")
+                
+                // Get homeserver for a public key
+                val foundHomeserver = pubkyManager.getHomeserver(publishResult)
+                Log.d("Pubky", "Homeserver for this key: $foundHomeserver")
             } catch (e: Exception) {
                 Log.e("Pubky", "Error: ${e.message}")
             }
@@ -313,6 +338,52 @@ suspend fun signUpWithToken(secretKey: String, homeserver: String, token: String
 }
 ```
 
+### Getting and Using Homeserver Information
+
+You can retrieve the homeserver information for a Pubky:
+
+```swift
+// iOS
+func findHomeserver(pubkyKey: String) async throws -> String {
+    let result = try getHomeserver(pubky: pubkyKey)
+    if result[0] == "error" {
+        throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
+    }
+    return result[1]
+}
+
+// Usage example
+func checkAndReconnect(pubkyKey: String) async {
+    do {
+        let homeserver = try await findHomeserver(pubkyKey: pubkyKey)
+        print("Found homeserver: \(homeserver)")
+    } catch {
+        print("Failed to find homeserver: \(error.localizedDescription)")
+    }
+}
+```
+
+```kotlin
+// Android
+suspend fun findHomeserver(pubkyKey: String): String {
+    val result = getHomeserver(pubkyKey)
+    if (result[0] == "error") {
+        throw Exception(result[1])
+    }
+    return result[1]
+}
+
+// Usage example
+suspend fun checkAndReconnect(pubkyKey: String) {
+    try {
+        val homeserver = findHomeserver(pubkyKey)
+        Log.d("Pubky", "Found homeserver: $homeserver")
+    } catch (e: Exception) {
+        Log.e("Pubky", "Failed to find homeserver: ${e.message}")
+    }
+}
+```
+
 ### Recovery File Management
 ```swift
 // iOS
@@ -338,8 +409,8 @@ fun createRecoveryFile(secretKey: String, passphrase: String): String {
 
 ## Error Handling
 All methods return a `Vec<String>` where:
-   - The first element ([0]) is either "success" or "error"
-   - The second element ([1]) contains either the result data or error message
+- The first element ([0]) is either "success" or "error"
+- The second element ([1]) contains either the result data or error message
 
 It's recommended to wrap all calls in try-catch blocks and handle errors appropriately in your application.
 
