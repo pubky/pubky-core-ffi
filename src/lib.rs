@@ -493,15 +493,20 @@ pub fn get(url: String) -> Vec<String> {
             Ok(res) => res,
             Err(_) => return create_response_vector(true, "Request failed".to_string()),
         };
+        if !response.status().is_success() {
+            return create_response_vector(true, format!("Request failed: {}", response.status()));
+        }
         let bytes = match response.bytes().await {
             Ok(b) => b,
-            Err(_) => return create_response_vector(true, "Failed to read response body".to_string()),
+            Err(e) => return create_response_vector(true, format!("Error reading response: {}", e)),
         };
-        let string = match str::from_utf8(&bytes) {
-            Ok(s) => s.to_string(),
-            Err(_) => return create_response_vector(true, "Invalid UTF-8 sequence".to_string()),
-        };
-        create_response_vector(false, string)
+        match str::from_utf8(&bytes) {
+            Ok(s) => create_response_vector(false, s.to_string()),
+            Err(_) => {
+                let base64 = base64::encode(&bytes);
+                create_response_vector(false, format!("base64:{}", base64))
+            }
+        }
     })
 }
 
