@@ -1,3 +1,8 @@
+.idea/
+.DS_Store
+/target/
+.rust-analyzer/
+.cargo/
 # Default ignored files
 /shelf/
 /workspace.xml
