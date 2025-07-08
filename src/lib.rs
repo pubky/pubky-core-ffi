@@ -1,36 +1,36 @@
-mod types;
-mod keypair;
 mod auth;
-mod utils;
+mod keypair;
 mod tests;
+mod types;
+mod utils;
 
-pub use types::*;
-pub use keypair::*;
 pub use auth::*;
+pub use keypair::*;
+pub use types::*;
 pub use utils::*;
 
 uniffi::setup_scaffolding!();
 
-use std::str;
-use base64::Engine;
 use base64::engine::general_purpose;
-use pubky::{Client};
+use base64::Engine;
 use hex;
 use hex::ToHex;
-use url::Url;
-use tokio;
-use pkarr::{SignedPacket, dns, PublicKey};
+use ntimestamp::Timestamp;
+use once_cell::sync::Lazy;
 use pkarr::dns::rdata::{RData, HTTPS, SVCB};
 use pkarr::dns::{Packet, ResourceRecord};
-use serde_json::json;
-use once_cell::sync::Lazy;
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use pkarr::{dns, Keypair, PublicKey, SignedPacket};
+use pubky::Client;
 use pubky_common::recovery_file;
 use pubky_common::session::Session;
-use ntimestamp::Timestamp;
+use serde_json::json;
+use std::str;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio;
 use tokio::runtime::Runtime;
 use tokio::time;
+use url::Url;
 
 pub struct NetworkClient {
     client: Mutex<Arc<Client>>,
@@ -68,14 +68,17 @@ pub fn get_pubky_client() -> Arc<Client> {
 #[uniffi::export]
 pub fn switch_network(use_testnet: bool) -> Vec<String> {
     NETWORK_CLIENT.switch_network(use_testnet);
-    create_response_vector(false, format!("Switched to {} network", if use_testnet { "testnet" } else { "default" }))
+    create_response_vector(
+        false,
+        format!(
+            "Switched to {} network",
+            if use_testnet { "testnet" } else { "default" }
+        ),
+    )
 }
 
-static TOKIO_RUNTIME: Lazy<Arc<Runtime>> = Lazy::new(|| {
-    Arc::new(
-        Runtime::new().expect("Failed to create Tokio runtime")
-    )
-});
+static TOKIO_RUNTIME: Lazy<Arc<Runtime>> =
+    Lazy::new(|| Arc::new(Runtime::new().expect("Failed to create Tokio runtime")));
 
 // Define the EventListener trait
 #[uniffi::export(callback_interface)]
@@ -114,9 +117,7 @@ impl EventNotifier {
     }
 }
 
-static EVENT_NOTIFIER: Lazy<Arc<EventNotifier>> = Lazy::new(|| {
-    Arc::new(EventNotifier::new())
-});
+static EVENT_NOTIFIER: Lazy<Arc<EventNotifier>> = Lazy::new(|| Arc::new(EventNotifier::new()));
 
 #[uniffi::export]
 pub fn set_event_listener(listener: Box<dyn EventListener>) {
@@ -135,7 +136,9 @@ pub fn start_internal_event_loop() {
         let mut interval = time::interval(Duration::from_secs(2));
         loop {
             interval.tick().await;
-            event_notifier.as_ref().notify_event("Internal event triggered".to_string());
+            event_notifier
+                .as_ref()
+                .notify_event("Internal event triggered".to_string());
         }
     });
 }
@@ -163,11 +166,18 @@ pub fn session(pubky: String) -> Vec<String> {
         let client = get_pubky_client();
         let public_key = match PublicKey::try_from(pubky) {
             Ok(key) => key,
-            Err(error) => return create_response_vector(true, format!("Invalid homeserver public key: {}", error)),
+            Err(error) => {
+                return create_response_vector(
+                    true,
+                    format!("Invalid homeserver public key: {}", error),
+                )
+            }
         };
         let result = match client.session(&public_key).await {
             Ok(session) => session,
-            Err(error) => return create_response_vector(true, format!("Failed to get session: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to get session: {}", error))
+            }
         };
         let session: Session = match result {
             Some(session) => session,
@@ -185,10 +195,10 @@ pub fn generate_secret_key() -> Vec<String> {
     let public_key = keypair.public_key();
     let uri = public_key.to_uri_string();
     let json_obj = json!({
-        "secret_key": secret_key,
-        "public_key": public_key.to_string(),
-        "uri": uri,
-     });
+       "secret_key": secret_key,
+       "public_key": public_key.to_string(),
+       "uri": uri,
+    });
 
     let json_str = match serde_json::to_string(&json_obj) {
         Ok(json) => json,
@@ -207,9 +217,9 @@ pub fn get_public_key_from_secret_key(secret_key: String) -> Vec<String> {
     let public_key = keypair.public_key();
     let uri = public_key.to_uri_string();
     let json_obj = json!({
-        "public_key": public_key.to_string(),
-        "uri": uri,
-     });
+       "public_key": public_key.to_string(),
+       "uri": uri,
+    });
 
     let json_str = match serde_json::to_string(&json_obj) {
         Ok(json) => json,
@@ -255,9 +265,18 @@ pub fn publish_https(record_name: String, target: String, secret_key: String) ->
 
         let signed_packet = match SignedPacket::new(&keypair, &packet.answers, Timestamp::now()) {
             Ok(signed_packet) => signed_packet,
-            Err(e) => return create_response_vector(true, format!("Failed to create signed packet: {}", e)),
+            Err(e) => {
+                return create_response_vector(
+                    true,
+                    format!("Failed to create signed packet: {}", e),
+                )
+            }
         };
-        match client.pkarr().publish(&signed_packet, Some(Timestamp::now())).await {
+        match client
+            .pkarr()
+            .publish(&signed_packet, Some(Timestamp::now()))
+            .await
+        {
             Ok(()) => create_response_vector(false, keypair.public_key().to_string()),
             Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
         }
@@ -278,7 +297,8 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
         match client.pkarr().resolve(&public_key).await {
             Some(signed_packet) => {
                 // Extract HTTPS records from the signed packet
-                let https_records: Vec<serde_json::Value> = signed_packet.all_resource_records()
+                let https_records: Vec<serde_json::Value> = signed_packet
+                    .all_resource_records()
                     .filter_map(|record| {
                         if let dns::rdata::RData::HTTPS(https) = &record.rdata {
                             // Create a JSON object
@@ -340,11 +360,16 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
 
                 let json_str = match serde_json::to_string(&json_obj) {
                     Ok(json) => json,
-                    Err(e) => return create_response_vector(true, format!("Failed to serialize JSON: {}", e)),
+                    Err(e) => {
+                        return create_response_vector(
+                            true,
+                            format!("Failed to serialize JSON: {}", e),
+                        )
+                    }
                 };
 
                 create_response_vector(false, json_str)
-            },
+            }
             None => create_response_vector(true, "No signed packet found".to_string()),
         }
     })
@@ -357,23 +382,37 @@ pub fn get_signup_token(homeserver_pubky: String, admin_password: String) -> Vec
         let client = get_pubky_client();
 
         let response = match client
-            .get(&format!("https://{homeserver_pubky}/admin/generate_signup_token"))
+            .get(&format!(
+                "https://{homeserver_pubky}/admin/generate_signup_token"
+            ))
             .header("X-Admin-Password", admin_password)
             .send()
-            .await {
+            .await
+        {
             Ok(res) => res,
-            Err(error) => return create_response_vector(true, format!("Failed to get signup token: {}", error)),
+            Err(error) => {
+                return create_response_vector(
+                    true,
+                    format!("Failed to get signup token: {}", error),
+                )
+            }
         };
 
         match response.text().await {
             Ok(signup_token) => create_response_vector(false, signup_token),
-            Err(error) => create_response_vector(true, format!("Failed to read signup token: {}", error)),
+            Err(error) => {
+                create_response_vector(true, format!("Failed to read signup token: {}", error))
+            }
         }
     })
 }
 
 #[uniffi::export]
-pub fn sign_up(secret_key: String, homeserver: String, signup_token: Option<String>) -> Vec<String> {
+pub fn sign_up(
+    secret_key: String,
+    homeserver: String,
+    signup_token: Option<String>,
+) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let client = get_pubky_client();
@@ -384,13 +423,19 @@ pub fn sign_up(secret_key: String, homeserver: String, signup_token: Option<Stri
 
         let homeserver_public_key = match PublicKey::try_from(homeserver) {
             Ok(key) => key,
-            Err(error) => return create_response_vector(true, format!("Invalid homeserver public key: {}", error)),
+            Err(error) => {
+                return create_response_vector(
+                    true,
+                    format!("Invalid homeserver public key: {}", error),
+                )
+            }
         };
 
-        match client.signup(&keypair, &homeserver_public_key, signup_token.as_deref()).await {
-            Ok(session) => {
-                create_response_vector(false, session_to_json(&session))
-            },
+        match client
+            .signup(&keypair, &homeserver_public_key, signup_token.as_deref())
+            .await
+        {
+            Ok(session) => create_response_vector(false, session_to_json(&session)),
             Err(error) => create_response_vector(true, format!("signup failure: {}", error)),
         }
     })
@@ -408,12 +453,24 @@ pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<Strin
 
         let homeserver_public_key = match PublicKey::try_from(homeserver) {
             Ok(key) => key,
-            Err(error) => return create_response_vector(true, format!("Invalid homeserver public key: {}", error)),
+            Err(error) => {
+                return create_response_vector(
+                    true,
+                    format!("Invalid homeserver public key: {}", error),
+                )
+            }
         };
 
-        match client.republish_homeserver(&keypair, &homeserver_public_key).await {
-            Ok(_) => create_response_vector(false, "Homeserver republished successfully".to_string()),
-            Err(error) => create_response_vector(true, format!("Failed to republish homeserver: {}", error)),
+        match client
+            .republish_homeserver(&keypair, &homeserver_public_key)
+            .await
+        {
+            Ok(_) => {
+                create_response_vector(false, "Homeserver republished successfully".to_string())
+            }
+            Err(error) => {
+                create_response_vector(true, format!("Failed to republish homeserver: {}", error))
+            }
         }
     })
 }
@@ -428,12 +485,8 @@ pub fn sign_in(secret_key: String) -> Vec<String> {
             Err(error) => return create_response_vector(true, error),
         };
         match client.signin(&keypair).await {
-            Ok(session) => {
-                create_response_vector(false, session_to_json(&session))
-            },
-            Err(error) => {
-                create_response_vector(true, format!("Failed to sign in: {}", error))
-            }
+            Ok(session) => create_response_vector(false, session_to_json(&session)),
+            Err(error) => create_response_vector(true, format!("Failed to sign in: {}", error)),
         }
     })
 }
@@ -449,9 +502,7 @@ pub fn sign_out(secret_key: String) -> Vec<String> {
         };
         match client.signout(&keypair.public_key()).await {
             Ok(_) => create_response_vector(false, "Sign out success".to_string()),
-            Err(error) => {
-                create_response_vector(true, format!("Failed to sign out: {}", error))
-            }
+            Err(error) => create_response_vector(true, format!("Failed to sign out: {}", error)),
         }
     })
 }
@@ -467,14 +518,9 @@ pub fn put(url: String, content: String) -> Vec<String> {
             Ok(url) => url,
             Err(_) => return create_response_vector(true, "Failed to parse URL".to_string()),
         };
-        match client.put(parsed_url)
-            .body(content_bytes)
-            .send()
-            .await {
+        match client.put(parsed_url).body(content_bytes).send().await {
             Ok(_) => create_response_vector(false, trimmed_url.to_string()),
-            Err(error) => {
-                create_response_vector(true, format!("Failed to put: {}", error))
-            }
+            Err(error) => create_response_vector(true, format!("Failed to put: {}", error)),
         }
     })
 }
@@ -498,7 +544,9 @@ pub fn get(url: String) -> Vec<String> {
         }
         let bytes = match response.bytes().await {
             Ok(b) => b,
-            Err(e) => return create_response_vector(true, format!("Error reading response: {}", e)),
+            Err(e) => {
+                return create_response_vector(true, format!("Error reading response: {}", e))
+            }
         };
         match str::from_utf8(&bytes) {
             Ok(s) => create_response_vector(false, s.to_string()),
@@ -522,7 +570,9 @@ pub fn resolve(public_key: String) -> Vec<String> {
     runtime.block_on(async {
         let public_key = match public_key.as_str().try_into() {
             Ok(key) => key,
-            Err(e) => return create_response_vector(true, format!("Invalid zbase32 encoded key: {}", e)),
+            Err(e) => {
+                return create_response_vector(true, format!("Invalid zbase32 encoded key: {}", e))
+            }
         };
         let client = get_pubky_client();
 
@@ -532,13 +582,11 @@ pub fn resolve(public_key: String) -> Vec<String> {
                 // Convert each ResourceRecord to a JSON value, handling errors appropriately
                 let json_records: Vec<serde_json::Value> = all_records
                     .iter()
-                    .filter_map(|record| {
-                        match resource_record_to_json(record) {
-                            Ok(json_value) => Some(json_value),
-                            Err(e) => {
-                                eprintln!("Error converting record to JSON: {}", e);
-                                None
-                            }
+                    .filter_map(|record| match resource_record_to_json(record) {
+                        Ok(json_value) => Some(json_value),
+                        Err(e) => {
+                            eprintln!("Error converting record to JSON: {}", e);
+                            None
                         }
                     })
                     .collect();
@@ -564,10 +612,8 @@ pub fn resolve(public_key: String) -> Vec<String> {
                     .expect("Failed to convert JSON object to string");
 
                 create_response_vector(false, json_str)
-            },
-            None => {
-                create_response_vector(true, "No signed packet found".to_string())
             }
+            None => create_response_vector(true, "No signed packet found".to_string()),
         }
     })
 }
@@ -587,7 +633,9 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
 
         let dns_name = match dns::Name::new(&record_name) {
             Ok(name) => name,
-            Err(e) => return create_response_vector(true, format!("Failed to create DNS name: {}", e)),
+            Err(e) => {
+                return create_response_vector(true, format!("Failed to create DNS name: {}", e))
+            }
         };
 
         let record_content_str: &str = record_content.as_str();
@@ -595,7 +643,10 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
         let txt_record = match record_content_str.try_into() {
             Ok(value) => RData::TXT(value),
             Err(e) => {
-                return create_response_vector(true, format!("Failed to convert string to TXT record: {}", e))
+                return create_response_vector(
+                    true,
+                    format!("Failed to convert string to TXT record: {}", e),
+                )
             }
         };
 
@@ -608,13 +659,13 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
 
         match SignedPacket::new(&keypair, &packet.answers, Timestamp::now()) {
             Ok(signed_packet) => {
-                match client.pkarr().publish(&signed_packet, Some(Timestamp::now())).await {
-                    Ok(()) => {
-                        create_response_vector(false, keypair.public_key().to_string())
-                    }
-                    Err(e) => {
-                        create_response_vector(true, format!("Failed to publish: {}", e))
-                    }
+                match client
+                    .pkarr()
+                    .publish(&signed_packet, Some(Timestamp::now()))
+                    .await
+                {
+                    Ok(()) => create_response_vector(false, keypair.public_key().to_string()),
+                    Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
                 }
             }
             Err(e) => {
@@ -635,17 +686,26 @@ pub fn list(url: String) -> Vec<String> {
         };
         let list_builder = match client.list(parsed_url) {
             Ok(list) => list,
-            Err(error) => return create_response_vector(true, format!("Failed to list: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to list: {}", error))
+            }
         };
         // Execute the non-Send part synchronously
         let send_future = list_builder.send();
         let send_res = match send_future.await {
             Ok(res) => res,
-            Err(error) => return create_response_vector(true, format!("Failed to send list request: {}", error))
+            Err(error) => {
+                return create_response_vector(
+                    true,
+                    format!("Failed to send list request: {}", error),
+                )
+            }
         };
         let json_string = match serde_json::to_string(&send_res) {
             Ok(json) => json,
-            Err(error) => return create_response_vector(true, format!("Failed to serialize JSON: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to serialize JSON: {}", error))
+            }
         };
         create_response_vector(false, json_string)
     })
@@ -670,9 +730,12 @@ pub fn parse_auth_url(url: String) -> Vec<String> {
 }
 
 #[uniffi::export]
-pub fn create_recovery_file(secret_key: String, passphrase: String,) -> Vec<String> {
+pub fn create_recovery_file(secret_key: String, passphrase: String) -> Vec<String> {
     if secret_key.is_empty() || passphrase.is_empty() {
-        return create_response_vector(true, "Secret key and passphrase must not be empty".to_string());
+        return create_response_vector(
+            true,
+            "Secret key and passphrase must not be empty".to_string(),
+        );
     }
     let keypair = match get_keypair_from_secret_key(&secret_key) {
         Ok(keypair) => keypair,
@@ -686,15 +749,25 @@ pub fn create_recovery_file(secret_key: String, passphrase: String,) -> Vec<Stri
 #[uniffi::export]
 pub fn decrypt_recovery_file(recovery_file: String, passphrase: String) -> Vec<String> {
     if recovery_file.is_empty() || passphrase.is_empty() {
-        return create_response_vector(true, "Recovery file and passphrase must not be empty".to_string());
+        return create_response_vector(
+            true,
+            "Recovery file and passphrase must not be empty".to_string(),
+        );
     }
     let recovery_file_bytes = match base64::decode(&recovery_file) {
         Ok(bytes) => bytes,
-        Err(error) => return create_response_vector(true, format!("Failed to decode recovery file: {}", error)),
+        Err(error) => {
+            return create_response_vector(
+                true,
+                format!("Failed to decode recovery file: {}", error),
+            )
+        }
     };
     let keypair = match recovery_file::decrypt_recovery_file(&recovery_file_bytes, &passphrase) {
         Ok(keypair) => keypair,
-        Err(_) => return create_response_vector(true, "Failed to decrypt recovery file".to_string()),
+        Err(_) => {
+            return create_response_vector(true, "Failed to decrypt recovery file".to_string())
+        }
     };
     let secret_key = get_secret_key_from_keypair(&keypair);
     create_response_vector(false, secret_key)
@@ -707,12 +780,52 @@ pub fn get_homeserver(pubky: String) -> Vec<String> {
         let client = get_pubky_client();
         let public_key = match PublicKey::try_from(pubky) {
             Ok(key) => key,
-            Err(error) => return create_response_vector(true, format!("Invalid public key: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Invalid public key: {}", error))
+            }
         };
 
         match client.get_homeserver(&public_key).await {
             Some(homeserver) => create_response_vector(false, homeserver),
-            None => create_response_vector(true, "No homeserver found for this public key".to_string()),
+            None => {
+                create_response_vector(true, "No homeserver found for this public key".to_string())
+            }
         }
     })
+}
+
+#[uniffi::export]
+pub fn generate_mnemonic_phrase() -> Vec<String> {
+    match generate_mnemonic() {
+        Ok(mnemonic) => create_response_vector(false, mnemonic),
+        Err(error) => create_response_vector(true, error),
+    }
+}
+
+#[uniffi::export]
+pub fn mnemonic_phrase_to_keypair(mnemonic_phrase: String) -> Vec<String> {
+    match mnemonic_to_keypair(&mnemonic_phrase) {
+        Ok(keypair) => match keypair_to_json_string(&keypair, None) {
+            Ok(json_str) => create_response_vector(false, json_str),
+            Err(error) => create_response_vector(true, error),
+        },
+        Err(error) => create_response_vector(true, error),
+    }
+}
+
+#[uniffi::export]
+pub fn generate_mnemonic_phrase_and_keypair() -> Vec<String> {
+    match generate_mnemonic_and_keypair() {
+        Ok((mnemonic, keypair)) => match keypair_to_json_string(&keypair, Some(&mnemonic)) {
+            Ok(json_str) => create_response_vector(false, json_str),
+            Err(error) => create_response_vector(true, error),
+        },
+        Err(error) => create_response_vector(true, error),
+    }
+}
+
+#[uniffi::export]
+pub fn validate_mnemonic_phrase(mnemonic_phrase: String) -> Vec<String> {
+    let is_valid = validate_mnemonic(&mnemonic_phrase);
+    create_response_vector(false, is_valid.to_string())
 }

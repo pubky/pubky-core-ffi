@@ -1,15 +1,13 @@
+use crate::generate_keypair;
+use once_cell::sync::Lazy;
+use pkarr::Keypair;
+use pubky::Client;
 use std::string::ToString;
 use std::sync::Arc;
-use once_cell::sync::Lazy;
-use pubky::{Client};
-use pkarr::Keypair;
-use crate::{generate_keypair};
 
-pub static TEST_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| {
-    match Client::builder().build() {
-        Ok(client) => Arc::new(client),
-        Err(_) => panic!("Failed to create PubkyClient"),
-    }
+pub static TEST_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| match Client::builder().build() {
+    Ok(client) => Arc::new(client),
+    Err(_) => panic!("Failed to create PubkyClient"),
 });
 
 //pub const HOMESERVER: &str = "8pinxxgqs41n4aididenw5apqp1urfmzdztr8jt4abrkdn435ewo";
@@ -33,10 +31,10 @@ pub fn get_test_setup() -> (Keypair, String, String) {
 
 #[cfg(test)]
 mod tests {
-    use tokio;
-    use base64;
-    use crate::*;
     use crate::tests::get_test_setup;
+    use crate::*;
+    use base64;
+    use tokio;
 
     // Test keypair generation
     #[test]
@@ -48,7 +46,7 @@ mod tests {
         let content = "test content".to_string();
 
         let sign_up_result = sign_up(secret_key, homeserver, None);
-       // assert_eq!(sign_up_result[0], "success");
+        // assert_eq!(sign_up_result[0], "success");
 
         let inner_url = url.clone();
 
@@ -69,7 +67,11 @@ mod tests {
         let json: serde_json::Value = serde_json::from_str(&list_result[1]).unwrap();
         assert!(json.is_array());
 
-        if let Some(url_str) = json.as_array().and_then(|arr| arr.get(0)).and_then(|v| v.as_str()) {
+        if let Some(url_str) = json
+            .as_array()
+            .and_then(|arr| arr.get(0))
+            .and_then(|v| v.as_str())
+        {
             assert!(url_str.contains(&public_key));
         } else {
             panic!("Expected array with URL string");
@@ -196,7 +198,11 @@ mod tests {
         // Verify deletion by checking for empty content
         let get_result = get(url.clone());
         println!("Get result after delete: {:?}", get_result);
-        assert_eq!(get_result[1], "", "File should be empty after deletion at URL: {}", url);
+        assert_eq!(
+            get_result[1], "",
+            "File should be empty after deletion at URL: {}",
+            url
+        );
     }
 
     // Test network switching
@@ -264,5 +270,122 @@ mod tests {
         println!("Republish homeserver result: {:?}", republish_result);
         assert_eq!(republish_result[0], "success");
         assert_eq!(republish_result[1], "Homeserver republished successfully");
+    }
+
+    // Test generate_mnemonic_phrase
+    #[test]
+    fn test_generate_mnemonic_phrase() {
+        let result = generate_mnemonic_phrase();
+        assert_eq!(result[0], "success");
+
+        let mnemonic = &result[1];
+        let words: Vec<&str> = mnemonic.split_whitespace().collect();
+        assert_eq!(words.len(), 12, "Mnemonic should have 12 words");
+
+        // Validate the generated mnemonic
+        let validate_result = validate_mnemonic_phrase(mnemonic.clone());
+        assert_eq!(validate_result[0], "success");
+        assert_eq!(validate_result[1], "true");
+    }
+
+    // Test mnemonic_phrase_to_keypair
+    #[test]
+    fn test_mnemonic_phrase_to_keypair() {
+        // First generate a valid mnemonic
+        let mnemonic_result = generate_mnemonic_phrase();
+        assert_eq!(mnemonic_result[0], "success");
+        let mnemonic = mnemonic_result[1].clone();
+
+        // Convert to keypair
+        let result = mnemonic_phrase_to_keypair(mnemonic);
+        assert_eq!(result[0], "success");
+
+        let json: serde_json::Value = serde_json::from_str(&result[1]).unwrap();
+        assert!(json["secret_key"].is_string());
+        assert!(json["public_key"].is_string());
+        assert!(json["uri"].is_string());
+
+        // Test with invalid mnemonic
+        let invalid_result = mnemonic_phrase_to_keypair("invalid mnemonic phrase".to_string());
+        assert_eq!(invalid_result[0], "error");
+    }
+
+    // Test generate_mnemonic_phrase_and_keypair
+    #[test]
+    fn test_generate_mnemonic_phrase_and_keypair() {
+        let result = generate_mnemonic_phrase_and_keypair();
+        assert_eq!(result[0], "success");
+
+        let json: serde_json::Value = serde_json::from_str(&result[1]).unwrap();
+        assert!(json["mnemonic"].is_string());
+        assert!(json["secret_key"].is_string());
+        assert!(json["public_key"].is_string());
+        assert!(json["uri"].is_string());
+
+        // Verify the mnemonic is valid
+        let mnemonic = json["mnemonic"].as_str().unwrap();
+        let words: Vec<&str> = mnemonic.split_whitespace().collect();
+        assert_eq!(words.len(), 12, "Mnemonic should have 12 words");
+
+        // Verify we can recreate the same keypair from the mnemonic
+        let keypair_result = mnemonic_phrase_to_keypair(mnemonic.to_string());
+        assert_eq!(keypair_result[0], "success");
+        let keypair_json: serde_json::Value = serde_json::from_str(&keypair_result[1]).unwrap();
+        assert_eq!(json["secret_key"], keypair_json["secret_key"]);
+        assert_eq!(json["public_key"], keypair_json["public_key"]);
+    }
+
+    // Test validate_mnemonic_phrase
+    #[test]
+    fn test_validate_mnemonic_phrase() {
+        // Test with valid mnemonic
+        let valid_mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let result = validate_mnemonic_phrase(valid_mnemonic.to_string());
+        assert_eq!(result[0], "success");
+        assert_eq!(result[1], "true");
+
+        // Test with invalid mnemonic
+        let invalid_mnemonic = "invalid words that are not in the bip39 wordlist";
+        let result = validate_mnemonic_phrase(invalid_mnemonic.to_string());
+        assert_eq!(result[0], "success");
+        assert_eq!(result[1], "false");
+
+        // Test with wrong number of words
+        let wrong_count = "abandon abandon abandon";
+        let result = validate_mnemonic_phrase(wrong_count.to_string());
+        assert_eq!(result[0], "success");
+        assert_eq!(result[1], "false");
+    }
+
+    // Test mnemonic consistency
+    #[test]
+    fn test_mnemonic_consistency() {
+        // Generate a mnemonic and verify consistent keypair derivation
+        let mnemonic_result = generate_mnemonic_phrase();
+        assert_eq!(mnemonic_result[0], "success");
+        let mnemonic = mnemonic_result[1].clone();
+
+        // Get keypair multiple times and ensure consistency
+        let keypair1 = mnemonic_phrase_to_keypair(mnemonic.clone());
+        let keypair2 = mnemonic_phrase_to_keypair(mnemonic.clone());
+        assert_eq!(keypair1[0], "success");
+        assert_eq!(keypair2[0], "success");
+
+        let json1: serde_json::Value = serde_json::from_str(&keypair1[1]).unwrap();
+        let json2: serde_json::Value = serde_json::from_str(&keypair2[1]).unwrap();
+
+        // Verify same mnemonic produces same keypair
+        assert_eq!(
+            json1["secret_key"], json2["secret_key"],
+            "Same mnemonic should produce same secret key"
+        );
+        assert_eq!(
+            json1["public_key"], json2["public_key"],
+            "Same mnemonic should produce same public key"
+        );
+        assert_eq!(
+            json1["uri"], json2["uri"],
+            "Same mnemonic should produce same URI"
+        );
     }
 }

@@ -1,9 +1,11 @@
-use std::error::Error;
-use std::net::{Ipv4Addr, Ipv6Addr};
-use serde_json::json;
+use crate::get_secret_key_from_keypair;
 use pkarr::dns::rdata::RData;
 use pkarr::dns::ResourceRecord;
+use pkarr::Keypair;
 use pubky_common::session::Session;
+use serde_json::json;
+use std::error::Error;
+use std::net::{Ipv4Addr, Ipv6Addr};
 
 pub fn create_response_vector(error: bool, data: String) -> Vec<String> {
     if error {
@@ -17,40 +19,39 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
     match &record.rdata {
         RData::TXT(txt) => {
             let attributes = txt.attributes();
-            let strings: Vec<String> = attributes.into_iter()
-                .map(|(key, value)| {
-                    match value {
-                        Some(v) => format!("{}={}", key, v),
-                        None => key,
-                    }
+            let strings: Vec<String> = attributes
+                .into_iter()
+                .map(|(key, value)| match value {
+                    Some(v) => format!("{}={}", key, v),
+                    None => key,
                 })
                 .collect();
             json!({
                 "type": "TXT",
                 "strings": strings
             })
-        },
+        }
         RData::A(a) => {
             let ipv4 = Ipv4Addr::from(a.address);
             json!({
                 "type": "A",
                 "address": ipv4.to_string()
             })
-        },
+        }
         RData::AAAA(aaaa) => {
             let ipv6 = Ipv6Addr::from(aaaa.address);
             json!({
                 "type": "AAAA",
                 "address": ipv6.to_string()
             })
-        },
+        }
         RData::AFSDB(afsdb) => {
             json!({
                 "type": "AFSDB",
                 "subtype": afsdb.subtype,
                 "hostname": afsdb.hostname.to_string()
             })
-        },
+        }
         RData::CAA(caa) => {
             json!({
                 "type": "CAA",
@@ -58,21 +59,21 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "tag": caa.tag.to_string(),
                 "value": base64::encode(&caa.value)
             })
-        },
+        }
         RData::HINFO(hinfo) => {
             json!({
                 "type": "HINFO",
                 "cpu": hinfo.cpu.to_string(),
                 "os": hinfo.os.to_string()
             })
-        },
+        }
         RData::ISDN(isdn) => {
             json!({
                 "type": "ISDN",
                 "address": isdn.address.to_string(),
                 "sa": isdn.sa.to_string()
             })
-        },
+        }
         RData::LOC(loc) => {
             json!({
                 "type": "LOC",
@@ -84,21 +85,21 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "longitude": loc.longitude,
                 "altitude": loc.altitude
             })
-        },
+        }
         RData::MINFO(minfo) => {
             json!({
                 "type": "MINFO",
                 "rmailbox": minfo.rmailbox.to_string(),
                 "emailbox": minfo.emailbox.to_string()
             })
-        },
+        }
         RData::MX(mx) => {
             json!({
                 "type": "MX",
                 "preference": mx.preference,
                 "exchange": mx.exchange.to_string()
             })
-        },
+        }
         RData::NAPTR(naptr) => {
             json!({
                 "type": "NAPTR",
@@ -109,13 +110,13 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "regexp": naptr.regexp.to_string(),
                 "replacement": naptr.replacement.to_string()
             })
-        },
+        }
         RData::NULL(_, null_record) => {
             json!({
                 "type": "NULL",
                 "data": base64::encode(null_record.get_data())
             })
-        },
+        }
         RData::OPT(opt) => {
             json!({
                 "type": "OPT",
@@ -128,21 +129,21 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                     })
                 }).collect::<Vec<_>>()
             })
-        },
+        }
         RData::RouteThrough(rt) => {
             json!({
                 "type": "RT",
                 "preference": rt.preference,
                 "intermediate_host": rt.intermediate_host.to_string()
             })
-        },
+        }
         RData::RP(rp) => {
             json!({
                 "type": "RP",
                 "mbox": rp.mbox.to_string(),
                 "txt": rp.txt.to_string()
             })
-        },
+        }
         RData::SOA(soa) => {
             json!({
                 "type": "SOA",
@@ -154,7 +155,7 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "expire": soa.expire,
                 "minimum": soa.minimum
             })
-        },
+        }
         RData::SRV(srv) => {
             json!({
                 "type": "SRV",
@@ -163,7 +164,7 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "port": srv.port,
                 "target": srv.target.to_string()
             })
-        },
+        }
         RData::SVCB(svcb) => {
             let mut params = serde_json::Map::new();
             for (key, value) in svcb.iter_params() {
@@ -175,7 +176,7 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "target": svcb.target.to_string(),
                 "params": params
             })
-        },
+        }
         RData::WKS(wks) => {
             json!({
                 "type": "WKS",
@@ -183,7 +184,7 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
                 "protocol": wks.protocol,
                 "bit_map": base64::encode(&wks.bit_map)
             })
-        },
+        }
 
         _ => json!({
             "type": format!("{:?}", record.rdata.type_code()),
@@ -192,7 +193,9 @@ pub fn extract_rdata_for_json(record: &ResourceRecord) -> serde_json::Value {
     }
 }
 
-pub fn resource_record_to_json(record: &ResourceRecord) -> Result<serde_json::Value, Box<dyn Error>> {
+pub fn resource_record_to_json(
+    record: &ResourceRecord,
+) -> Result<serde_json::Value, Box<dyn Error>> {
     Ok(json!({
         "name": record.name.to_string(),
         "class": format!("{:?}", record.class),
@@ -250,4 +253,22 @@ pub fn session_to_json(session: &Session) -> String {
     });
 
     serde_json::to_string(&json_obj).unwrap_or_else(|e| format!("Failed to serialize JSON: {}", e))
+}
+
+pub fn keypair_to_json_string(keypair: &Keypair, mnemonic: Option<&str>) -> Result<String, String> {
+    let secret_key = get_secret_key_from_keypair(keypair);
+    let public_key = keypair.public_key();
+    let uri = public_key.to_uri_string();
+
+    let mut json_obj = json!({
+        "secret_key": secret_key,
+        "public_key": public_key.to_string(),
+        "uri": uri,
+    });
+
+    if let Some(mnemonic_phrase) = mnemonic {
+        json_obj["mnemonic"] = json!(mnemonic_phrase);
+    }
+
+    serde_json::to_string(&json_obj).map_err(|e| format!("Failed to serialize JSON: {}", e))
 }
