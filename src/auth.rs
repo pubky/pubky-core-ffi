@@ -1,9 +1,9 @@
 use crate::keypair::get_keypair_from_secret_key;
-use crate::{PubkyAuthDetails, Capability};
 use crate::utils::create_response_vector;
-use std::collections::HashMap;
-use pubky::{Client as PubkyClient};
+use crate::{Capability, PubkyAuthDetails};
+use pubky::Client as PubkyClient;
 use serde_json;
+use std::collections::HashMap;
 use url::Url;
 
 pub async fn authorize(url: String, secret_key: String) -> Vec<String> {
@@ -11,7 +11,7 @@ pub async fn authorize(url: String, secret_key: String) -> Vec<String> {
         Ok(client) => client,
         Err(error) => {
             return create_response_vector(true, format!("Failed to create PubkyClient: {}", error))
-        },
+        }
     };
     let keypair = match get_keypair_from_secret_key(&secret_key) {
         Ok(keypair) => keypair,

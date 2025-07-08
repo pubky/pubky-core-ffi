@@ -512,6 +512,10 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_delete_file() != 9063:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase() != 2358:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase_and_keypair() != 44395:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_generate_secret_key() != 12800:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_get() != 6591:
@@ -523,6 +527,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_pubkycore_checksum_func_get_signup_token() != 47927:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_list() != 43198:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_mnemonic_phrase_to_keypair() != 45784:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_parse_auth_url() != 27379:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -551,6 +557,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_pubkycore_checksum_func_sign_up() != 48789:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_switch_network() != 64215:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_validate_mnemonic_phrase() != 30362:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_method_eventlistener_on_event_occurred() != 11531:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -592,6 +600,14 @@ _UniffiLib.uniffi_pubkycore_fn_func_delete_file.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_delete_file.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_generate_mnemonic_phrase.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_generate_mnemonic_phrase.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_generate_mnemonic_phrase_and_keypair.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_generate_mnemonic_phrase_and_keypair.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_generate_secret_key.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -622,6 +638,11 @@ _UniffiLib.uniffi_pubkycore_fn_func_list.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_list.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_mnemonic_phrase_to_keypair.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_mnemonic_phrase_to_keypair.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_parse_auth_url.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -699,6 +720,11 @@ _UniffiLib.uniffi_pubkycore_fn_func_switch_network.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_switch_network.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_validate_mnemonic_phrase.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_validate_mnemonic_phrase.restype = _UniffiRustBuffer
 _UniffiLib.ffi_pubkycore_rustbuffer_alloc.argtypes = (
     ctypes.c_int32,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -970,6 +996,12 @@ _UniffiLib.uniffi_pubkycore_checksum_func_decrypt_recovery_file.restype = ctypes
 _UniffiLib.uniffi_pubkycore_checksum_func_delete_file.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_delete_file.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase_and_keypair.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase_and_keypair.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_generate_secret_key.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_generate_secret_key.restype = ctypes.c_uint16
@@ -988,6 +1020,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_get_signup_token.restype = ctypes.c_ui
 _UniffiLib.uniffi_pubkycore_checksum_func_list.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_list.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_mnemonic_phrase_to_keypair.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_mnemonic_phrase_to_keypair.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_parse_auth_url.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_parse_auth_url.restype = ctypes.c_uint16
@@ -1030,6 +1065,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_sign_up.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_switch_network.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_switch_network.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_validate_mnemonic_phrase.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_validate_mnemonic_phrase.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_method_eventlistener_on_event_occurred.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_method_eventlistener_on_event_occurred.restype = ctypes.c_uint16
@@ -1356,6 +1394,14 @@ def delete_file(url: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(url)))
 
 
+def generate_mnemonic_phrase() -> "typing.List[str]":
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_generate_mnemonic_phrase,))
+
+
+def generate_mnemonic_phrase_and_keypair() -> "typing.List[str]":
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_generate_mnemonic_phrase_and_keypair,))
+
+
 def generate_secret_key() -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_generate_secret_key,))
 
@@ -1390,6 +1436,12 @@ def list(url: "str") -> "typing.List[str]":
     
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_list,
         _UniffiConverterString.lower(url)))
+
+
+def mnemonic_phrase_to_keypair(mnemonic_phrase: "str") -> "typing.List[str]":
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_mnemonic_phrase_to_keypair,
+        _UniffiConverterString.lower(mnemonic_phrase)))
 
 
 def parse_auth_url(url: "str") -> "typing.List[str]":
@@ -1490,18 +1542,27 @@ def switch_network(use_testnet: "bool") -> "typing.List[str]":
         _UniffiConverterBool.lower(use_testnet)))
 
 
+def validate_mnemonic_phrase(mnemonic_phrase: "str") -> "typing.List[str]":
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_validate_mnemonic_phrase,
+        _UniffiConverterString.lower(mnemonic_phrase)))
+
+
 __all__ = [
     "InternalError",
     "auth",
     "create_recovery_file",
     "decrypt_recovery_file",
     "delete_file",
+    "generate_mnemonic_phrase",
+    "generate_mnemonic_phrase_and_keypair",
     "generate_secret_key",
     "get",
     "get_homeserver",
     "get_public_key_from_secret_key",
     "get_signup_token",
     "list",
+    "mnemonic_phrase_to_keypair",
     "parse_auth_url",
     "publish",
     "publish_https",
@@ -1516,6 +1577,7 @@ __all__ = [
     "sign_out",
     "sign_up",
     "switch_network",
+    "validate_mnemonic_phrase",
     "EventNotifier",
     "EventListener",
 ]
