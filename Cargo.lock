@@ -1804,7 +1804,7 @@ dependencies = [
 
 [[package]]
 name = "pubkycore"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "base64",
  "bip39",
