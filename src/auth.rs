@@ -1,33 +1,10 @@
-use crate::keypair::get_keypair_from_secret_key;
-use crate::utils::create_response_vector;
+// Note: The authorize function has been moved inline into the auth() function in lib.rs
+// using the new approve_auth API from PubkySigner
+
 use crate::{Capability, PubkyAuthDetails};
-use pubky::Client as PubkyClient;
 use serde_json;
 use std::collections::HashMap;
 use url::Url;
-
-pub async fn authorize(url: String, secret_key: String) -> Vec<String> {
-    let client = match PubkyClient::builder().build() {
-        Ok(client) => client,
-        Err(error) => {
-            return create_response_vector(true, format!("Failed to create PubkyClient: {}", error))
-        }
-    };
-    let keypair = match get_keypair_from_secret_key(&secret_key) {
-        Ok(keypair) => keypair,
-        Err(error) => return create_response_vector(true, error),
-    };
-
-    let parsed_url = match Url::parse(&url) {
-        Ok(url) => url,
-        Err(_) => return create_response_vector(true, "Failed to parse URL".to_string()),
-    };
-
-    match client.send_auth_token(&keypair, &parsed_url).await {
-        Ok(_) => create_response_vector(false, "send_auth_token success".to_string()),
-        Err(error) => create_response_vector(true, format!("send_auth_token failure: {}", error)),
-    }
-}
 
 pub fn pubky_auth_details_to_json(details: &PubkyAuthDetails) -> Result<String, String> {
     serde_json::to_string(details).map_err(|_| "Error serializing to JSON".to_string())
