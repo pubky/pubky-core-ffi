@@ -1,40 +1,20 @@
-use crate::generate_keypair;
-use once_cell::sync::Lazy;
-use pkarr::Keypair;
-use pubky::Client;
-use std::string::ToString;
-use std::sync::Arc;
-
-pub static TEST_CLIENT: Lazy<Arc<Client>> = Lazy::new(|| match Client::builder().build() {
-    Ok(client) => Arc::new(client),
-    Err(_) => panic!("Failed to create PubkyClient"),
-});
-
-//pub const HOMESERVER: &str = "8pinxxgqs41n4aididenw5apqp1urfmzdztr8jt4abrkdn435ewo";
-pub const HOMESERVER: &str = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
-
-// For tests that need a consistent keypair
-pub static SHARED_KEYPAIR: Lazy<Keypair> = Lazy::new(Keypair::random);
-
-// For tests that need fresh keypairs
-pub fn generate_test_keypair() -> Keypair {
-    Keypair::random()
-}
-
-pub fn get_test_setup() -> (Keypair, String, String) {
-    let keypair = generate_keypair();
-    //let keypair = SHARED_KEYPAIR.clone();
-    let secret_key = hex::encode(keypair.secret_key());
-    let homeserver = HOMESERVER.to_string();
-    (keypair, secret_key, homeserver)
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::tests::get_test_setup;
+    use crate::generate_keypair;
     use crate::*;
     use base64;
+    use pkarr::Keypair;
+    use std::string::ToString;
     use tokio;
+
+    const HOMESERVER: &str = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
+
+    fn get_test_setup() -> (Keypair, String, String) {
+        let keypair = generate_keypair();
+        let secret_key = hex::encode(keypair.secret_key());
+        let homeserver = HOMESERVER.to_string();
+        (keypair, secret_key, homeserver)
+    }
 
     // Test keypair generation
     #[test]
@@ -45,12 +25,12 @@ mod tests {
         let url = format!("pubky://{}/pub/test.com/testfile", public_key);
         let content = "test content".to_string();
 
-        let sign_up_result = sign_up(secret_key, homeserver, None);
+        let sign_up_result = sign_up(secret_key.clone(), homeserver, None);
         // assert_eq!(sign_up_result[0], "success");
 
         let inner_url = url.clone();
 
-        let put_result = put(url.clone(), content.clone());
+        let put_result = put(url.clone(), content.clone(), secret_key.clone());
         assert_eq!(put_result[0], "success");
 
         // Add a small delay to ensure the put operation completes
@@ -181,14 +161,14 @@ mod tests {
         let content = "test content".to_string();
 
         // Put some content first
-        let put_result = put(url.clone(), content);
+        let put_result = put(url.clone(), content, secret_key.clone());
         println!("Put result: {:?}", put_result);
         assert_eq!(put_result[0], "success");
 
         std::thread::sleep(std::time::Duration::from_secs(2));
 
         // Test delete
-        let delete_result = delete_file(url.clone());
+        let delete_result = delete_file(url.clone(), secret_key.clone());
         println!("Delete result: {:?}", delete_result);
         assert_eq!(delete_result[0], "success");
         assert_eq!(delete_result[1], "Deleted successfully");
