@@ -20,7 +20,7 @@ use once_cell::sync::Lazy;
 use pkarr::dns::rdata::{RData, HTTPS, SVCB};
 use pkarr::dns::{Packet, ResourceRecord};
 use pkarr::{dns, PublicKey, SignedPacket};
-use pubky::Pubky;
+use pubky::{Pubky, Capabilities, PubkyAuthFlow, PubkySession};
 use pubky_common::recovery_file;
 use serde_json::json;
 use std::str;
@@ -77,6 +77,8 @@ pub fn switch_network(use_testnet: bool) -> Vec<String> {
 
 static TOKIO_RUNTIME: Lazy<Arc<Runtime>> =
     Lazy::new(|| Arc::new(Runtime::new().expect("Failed to create Tokio runtime")));
+
+static AUTH_FLOW: Lazy<Mutex<Option<PubkyAuthFlow>>> = Lazy::new(|| Mutex::new(None));
 
 // Define the EventListener trait
 #[uniffi::export(callback_interface)]
@@ -884,4 +886,111 @@ pub fn generate_mnemonic_phrase_and_keypair() -> Vec<String> {
 pub fn validate_mnemonic_phrase(mnemonic_phrase: String) -> Vec<String> {
     let is_valid = validate_mnemonic(&mnemonic_phrase);
     create_response_vector(false, is_valid.to_string())
+}
+
+#[uniffi::export]
+pub fn start_auth_flow(capabilities_str: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let caps = match Capabilities::try_from(capabilities_str.as_str()) {
+            Ok(caps) => caps,
+            Err(e) => return create_response_vector(true, format!("Invalid capabilities: {}", e)),
+        };
+
+        let pubky_client = get_pubky_client();
+        let http_client = pubky_client.client().clone();
+
+        let flow = match PubkyAuthFlow::builder(&caps)
+            .client(http_client)
+            .start()
+        {
+            Ok(flow) => flow,
+            Err(e) => return create_response_vector(true, format!("Failed to start auth flow: {}", e)),
+        };
+
+        let auth_url = flow.authorization_url().to_string();
+
+        let mut guard = AUTH_FLOW.lock().unwrap();
+        *guard = Some(flow);
+
+        create_response_vector(false, auth_url)
+    })
+}
+
+#[uniffi::export]
+pub fn await_auth_approval() -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let flow = {
+            let mut guard = AUTH_FLOW.lock().unwrap();
+            guard.take()
+        };
+
+        let flow = match flow {
+            Some(f) => f,
+            None => return create_response_vector(true, "No auth flow in progress".to_string()),
+        };
+
+        match flow.await_approval().await {
+            Ok(session) => {
+                let session_secret = session.export_secret();
+                let session_data = session_to_json_with_secret(session.info(), &session_secret);
+                create_response_vector(false, session_data)
+            }
+            Err(e) => create_response_vector(true, format!("Auth approval failed: {}", e)),
+        }
+    })
+}
+
+#[uniffi::export]
+pub fn put_with_session(url: String, content: String, session_secret: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    let content_bytes = content.into_bytes();
+    runtime.block_on(async {
+        let pubky_client = get_pubky_client();
+        let http_client = pubky_client.client().clone();
+
+        let session = match PubkySession::import_secret(&session_secret, Some(http_client)).await {
+            Ok(s) => s,
+            Err(e) => return create_response_vector(true, format!("Failed to import session: {}", e)),
+        };
+
+        let trimmed_url = url.trim_end_matches('/');
+        let path = if let Some(path_start) = trimmed_url.find("/pub/") {
+            &trimmed_url[path_start..]
+        } else {
+            return create_response_vector(true, "Invalid URL: must contain /pub/".to_string());
+        };
+
+        match session.storage().put(path, content_bytes).await {
+            Ok(_) => create_response_vector(false, trimmed_url.to_string()),
+            Err(e) => create_response_vector(true, format!("Failed to put: {}", e)),
+        }
+    })
+}
+
+#[uniffi::export]
+pub fn delete_with_session(url: String, session_secret: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let pubky_client = get_pubky_client();
+        let http_client = pubky_client.client().clone();
+
+        let session = match PubkySession::import_secret(&session_secret, Some(http_client)).await {
+            Ok(s) => s,
+            Err(e) => return create_response_vector(true, format!("Failed to import session: {}", e)),
+        };
+
+        let trimmed_url = url.trim_end_matches('/');
+        let path = if let Some(path_start) = trimmed_url.find("/pub/") {
+            &trimmed_url[path_start..]
+        } else {
+            return create_response_vector(true, "Invalid URL: must contain /pub/".to_string());
+        };
+
+        match session.storage().delete(path).await {
+            Ok(_) => create_response_vector(false, "Deleted successfully".to_string()),
+            Err(e) => create_response_vector(true, format!("Failed to delete: {}", e)),
+        }
+    })
 }
