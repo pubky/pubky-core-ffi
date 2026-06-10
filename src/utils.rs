@@ -20,11 +20,17 @@ fn svc_param_to_json(param: &SVCParam) -> serde_json::Value {
         SVCParam::NoDefaultAlpn => json!(true),
         SVCParam::Port(port) => json!(port),
         SVCParam::Ipv4Hint(ips) => {
-            json!(ips.iter().map(|ip| Ipv4Addr::from(*ip).to_string()).collect::<Vec<String>>())
+            json!(ips
+                .iter()
+                .map(|ip| Ipv4Addr::from(*ip).to_string())
+                .collect::<Vec<String>>())
         }
         SVCParam::Ech(data) => json!(base64_engine.encode(data.as_ref())),
         SVCParam::Ipv6Hint(ips) => {
-            json!(ips.iter().map(|ip| Ipv6Addr::from(*ip).to_string()).collect::<Vec<String>>())
+            json!(ips
+                .iter()
+                .map(|ip| Ipv6Addr::from(*ip).to_string())
+                .collect::<Vec<String>>())
         }
         SVCParam::InvalidKey => serde_json::Value::Null,
         SVCParam::Unknown(_, data) => json!(base64_engine.encode(data.as_ref())),

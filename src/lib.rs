@@ -15,12 +15,12 @@ use base64::engine::general_purpose::STANDARD as base64_engine;
 use base64::Engine;
 use hex;
 use once_cell::sync::Lazy;
-use pubky::pkarr::Timestamp;
 use pubky::pkarr::dns::rdata::{RData, SVCParam, HTTPS, SVCB};
 use pubky::pkarr::dns::{Packet, ResourceRecord};
+use pubky::pkarr::Timestamp;
 use pubky::pkarr::{dns, SignedPacket};
-use pubky::{AuthFlowKind, Capabilities, PublicKey, Pubky, PubkyAuthFlow, PubkySession};
 use pubky::recovery_file;
+use pubky::{AuthFlowKind, Capabilities, Pubky, PubkyAuthFlow, PubkySession, PublicKey};
 use serde_json::json;
 use std::str;
 use std::sync::{Arc, Mutex};
@@ -155,7 +155,9 @@ pub fn delete_file(url: String, secret_key: String) -> Vec<String> {
         let signer = client.signer(keypair);
         let session = match signer.signin().await {
             Ok(session) => session,
-            Err(error) => return create_response_vector(true, format!("Failed to sign in: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to sign in: {}", error))
+            }
         };
 
         let trimmed_url = url.trim_end_matches('/');
@@ -259,12 +261,7 @@ pub fn publish_https(record_name: String, target: String, secret_key: String) ->
                 )
             }
         };
-        match client
-            .client()
-            .pkarr()
-            .publish(&signed_packet, None)
-            .await
-        {
+        match client.client().pkarr().publish(&signed_packet, None).await {
             Ok(()) => create_response_vector(false, keypair.public_key().z32()),
             Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
         }
@@ -418,7 +415,7 @@ pub fn sign_up(
                 let session_secret = session.export_secret();
                 let session_data = session_to_json_with_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
-            },
+            }
             Err(error) => create_response_vector(true, format!("signup failure: {}", error)),
         }
     })
@@ -445,7 +442,10 @@ pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<Strin
         };
 
         let signer = client.signer(keypair);
-        match signer.pkdns().publish_homeserver_force(Some(&homeserver_public_key)).await
+        match signer
+            .pkdns()
+            .publish_homeserver_force(Some(&homeserver_public_key))
+            .await
         {
             Ok(_) => {
                 create_response_vector(false, "Homeserver republished successfully".to_string())
@@ -472,7 +472,7 @@ pub fn sign_in(secret_key: String) -> Vec<String> {
                 let session_secret = session.export_secret();
                 let session_data = session_to_json_with_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
-            },
+            }
             Err(error) => create_response_vector(true, format!("Failed to sign in: {}", error)),
         }
     })
@@ -486,15 +486,21 @@ pub fn sign_out(session_secret: String) -> Vec<String> {
         let http_client = pubky_client.client().clone();
 
         // Import the session from the secret token
-        let session = match pubky::PubkySession::import_secret(&session_secret, Some(http_client)).await {
+        let session = match pubky::PubkySession::import_secret(&session_secret, Some(http_client))
+            .await
+        {
             Ok(session) => session,
-            Err(error) => return create_response_vector(true, format!("Failed to import session: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to import session: {}", error))
+            }
         };
 
         // Sign out
         match session.signout().await {
             Ok(_) => create_response_vector(false, "Sign out success".to_string()),
-            Err((error, _)) => create_response_vector(true, format!("Failed to sign out: {}", error)),
+            Err((error, _)) => {
+                create_response_vector(true, format!("Failed to sign out: {}", error))
+            }
         }
     })
 }
@@ -507,19 +513,31 @@ pub fn revalidate_session(session_secret: String) -> Vec<String> {
         let http_client = pubky_client.client().clone();
 
         // Import the session from the secret token
-        let session = match pubky::PubkySession::import_secret(&session_secret, Some(http_client)).await {
+        let session = match pubky::PubkySession::import_secret(&session_secret, Some(http_client))
+            .await
+        {
             Ok(session) => session,
-            Err(error) => return create_response_vector(true, format!("Failed to import session: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to import session: {}", error))
+            }
         };
 
         // Revalidate returns the session info if still valid, None if expired
         match session.revalidate().await {
             Ok(Some(_session_info)) => {
                 let session_secret = session.export_secret();
-                create_response_vector(false, session_to_json_with_secret(&session, &session_secret))
-            },
-            Ok(None) => create_response_vector(true, "Session is no longer valid (expired or invalidated)".to_string()),
-            Err(error) => create_response_vector(true, format!("Failed to revalidate session: {}", error)),
+                create_response_vector(
+                    false,
+                    session_to_json_with_secret(&session, &session_secret),
+                )
+            }
+            Ok(None) => create_response_vector(
+                true,
+                "Session is no longer valid (expired or invalidated)".to_string(),
+            ),
+            Err(error) => {
+                create_response_vector(true, format!("Failed to revalidate session: {}", error))
+            }
         }
     })
 }
@@ -541,7 +559,9 @@ pub fn put(url: String, content: String, secret_key: String) -> Vec<String> {
         let signer = client.signer(keypair);
         let session = match signer.signin().await {
             Ok(session) => session,
-            Err(error) => return create_response_vector(true, format!("Failed to sign in: {}", error)),
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to sign in: {}", error))
+            }
         };
 
         let trimmed_url = url.trim_end_matches('/');
@@ -684,12 +704,7 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
 
         match SignedPacket::new(&keypair, &packet.answers, Timestamp::now()) {
             Ok(signed_packet) => {
-                match client
-                    .client()
-                    .pkarr()
-                    .publish(&signed_packet, None)
-                    .await
-                {
+                match client.client().pkarr().publish(&signed_packet, None).await {
                     Ok(()) => create_response_vector(false, keypair.public_key().z32()),
                     Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
                 }
@@ -714,7 +729,10 @@ pub fn list(url: String) -> Vec<String> {
         let list_builder = match public_storage.list(&trimmed_url) {
             Ok(list) => list,
             Err(error) => {
-                return create_response_vector(true, format!("Failed to create list builder: {}", error))
+                return create_response_vector(
+                    true,
+                    format!("Failed to create list builder: {}", error),
+                )
             }
         };
 
@@ -888,7 +906,9 @@ pub fn start_auth_flow(capabilities_str: String) -> Vec<String> {
             .start()
         {
             Ok(flow) => flow,
-            Err(e) => return create_response_vector(true, format!("Failed to start auth flow: {}", e)),
+            Err(e) => {
+                return create_response_vector(true, format!("Failed to start auth flow: {}", e))
+            }
         };
 
         let auth_url = flow.authorization_url().to_string();
@@ -935,7 +955,9 @@ pub fn put_with_session(url: String, content: String, session_secret: String) ->
 
         let session = match PubkySession::import_secret(&session_secret, Some(http_client)).await {
             Ok(s) => s,
-            Err(e) => return create_response_vector(true, format!("Failed to import session: {}", e)),
+            Err(e) => {
+                return create_response_vector(true, format!("Failed to import session: {}", e))
+            }
         };
 
         let trimmed_url = url.trim_end_matches('/');
@@ -961,7 +983,9 @@ pub fn delete_with_session(url: String, session_secret: String) -> Vec<String> {
 
         let session = match PubkySession::import_secret(&session_secret, Some(http_client)).await {
             Ok(s) => s,
-            Err(e) => return create_response_vector(true, format!("Failed to import session: {}", e)),
+            Err(e) => {
+                return create_response_vector(true, format!("Failed to import session: {}", e))
+            }
         };
 
         let trimmed_url = url.trim_end_matches('/');
