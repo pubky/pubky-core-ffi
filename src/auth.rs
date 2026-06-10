@@ -17,6 +17,15 @@ pub fn parse_pubky_auth_url(url_str: &str) -> Result<PubkyAuthDetails, String> {
         return Err("Invalid scheme, expected 'pubkyauth'".to_string());
     }
 
+    // pubky 0.9.1 deep links carry the intent in the host position
+    // (pubkyauth://signin?... / pubkyauth://signup?...). Legacy URLs
+    // (pubkyauth:///?...) have no host and mean signin.
+    let kind = match url.host_str().unwrap_or("") {
+        "signup" => "signup",
+        _ => "signin",
+    }
+    .to_string();
+
     // Collect query pairs into a HashMap for efficient access
     let query_params: HashMap<_, _> = url.query_pairs().into_owned().collect();
 
@@ -58,9 +67,17 @@ pub fn parse_pubky_auth_url(url_str: &str) -> Result<PubkyAuthDetails, String> {
             .collect::<Result<Vec<_>, String>>()?
     };
 
+    // Signup links (pubky 0.9.1) also carry the homeserver public key and an
+    // optional signup token: ...&hs={homeserver_z32}&st={signup_token}
+    let homeserver = query_params.get("hs").cloned().filter(|v| !v.is_empty());
+    let signup_token = query_params.get("st").cloned().filter(|v| !v.is_empty());
+
     Ok(PubkyAuthDetails {
         relay,
         capabilities,
         secret,
+        kind,
+        homeserver,
+        signup_token,
     })
 }

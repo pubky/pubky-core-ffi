@@ -14,14 +14,13 @@ uniffi::setup_scaffolding!();
 use base64::engine::general_purpose::STANDARD as base64_engine;
 use base64::Engine;
 use hex;
-use hex::ToHex;
-use pkarr::Timestamp;
 use once_cell::sync::Lazy;
-use pkarr::dns::rdata::{RData, HTTPS, SVCB};
-use pkarr::dns::{Packet, ResourceRecord};
-use pkarr::{dns, PublicKey, SignedPacket};
-use pubky::{Pubky, Capabilities, PubkyAuthFlow, PubkySession};
-use pubky_common::recovery_file;
+use pubky::pkarr::Timestamp;
+use pubky::pkarr::dns::rdata::{RData, SVCParam, HTTPS, SVCB};
+use pubky::pkarr::dns::{Packet, ResourceRecord};
+use pubky::pkarr::{dns, SignedPacket};
+use pubky::{AuthFlowKind, Capabilities, PublicKey, Pubky, PubkyAuthFlow, PubkySession};
+use pubky::recovery_file;
 use serde_json::json;
 use std::str;
 use std::sync::{Arc, Mutex};
@@ -182,7 +181,9 @@ pub fn generate_secret_key() -> Vec<String> {
     let uri = public_key.to_uri_string();
     let json_obj = json!({
        "secret_key": secret_key,
-       "public_key": public_key.to_string(),
+       // z32() keeps the bare z-base32 form; PublicKey::to_string() now
+       // prepends "pubky", which downstream apps and pubky:// URLs reject.
+       "public_key": public_key.z32(),
        "uri": uri,
     });
 
@@ -203,7 +204,7 @@ pub fn get_public_key_from_secret_key(secret_key: String) -> Vec<String> {
     let public_key = keypair.public_key();
     let uri = public_key.to_uri_string();
     let json_obj = json!({
-       "public_key": public_key.to_string(),
+       "public_key": public_key.z32(),
        "uri": uri,
     });
 
@@ -264,7 +265,7 @@ pub fn publish_https(record_name: String, target: String, secret_key: String) ->
             .publish(&signed_packet, None)
             .await
         {
-            Ok(()) => create_response_vector(false, keypair.public_key().to_string()),
+            Ok(()) => create_response_vector(false, keypair.public_key().z32()),
             Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
         }
     })
@@ -274,7 +275,7 @@ pub fn publish_https(record_name: String, target: String, secret_key: String) ->
 pub fn resolve_https(public_key: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
-        let public_key = match public_key.as_str().try_into() {
+        let public_key: pubky::pkarr::PublicKey = match public_key.as_str().try_into() {
             Ok(key) => key,
             Err(e) => return create_response_vector(true, format!("Invalid public key: {}", e)),
         };
@@ -297,32 +298,14 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
                                 "target": https.0.target.to_string(),
                             });
 
-                            // Access specific parameters using the constants from SVCB
-                            if let Some(port_param) = https.0.get_param(SVCB::PORT) {
-                                if port_param.len() == 2 {
-                                    let port = u16::from_be_bytes([port_param[0], port_param[1]]);
-                                    https_json["port"] = serde_json::json!(port);
-                                }
+                            // Access specific parameters via the typed SVCParam enum
+                            // (simple-dns 0.11 / pkarr 6). Port is key code 3, ALPN is 1.
+                            if let Some(SVCParam::Port(port)) = https.0.get_param(3) {
+                                https_json["port"] = serde_json::json!(port);
                             }
-
-                            // Access ALPN parameter if needed
-                            if let Some(alpn_param) = https.0.get_param(SVCB::ALPN) {
-                                // Parse ALPN protocols (list of character strings)
-                                let mut position = 0;
-                                let mut alpn_protocols = Vec::new();
-                                while position < alpn_param.len() {
-                                    let length = alpn_param[position] as usize;
-                                    position += 1;
-                                    if position + length <= alpn_param.len() {
-                                        let protocol = String::from_utf8_lossy(
-                                            &alpn_param[position..position + length],
-                                        );
-                                        alpn_protocols.push(protocol.to_string());
-                                        position += length;
-                                    } else {
-                                        break; // Malformed ALPN parameter
-                                    }
-                                }
+                            if let Some(SVCParam::Alpn(alpns)) = https.0.get_param(1) {
+                                let alpn_protocols: Vec<String> =
+                                    alpns.iter().map(|a| a.to_string()).collect();
                                 https_json["alpn"] = serde_json::json!(alpn_protocols);
                             }
                             // TODO: Add other parameters as needed.
@@ -416,7 +399,7 @@ pub fn sign_up(
             Err(error) => return create_response_vector(true, error),
         };
 
-        let homeserver_public_key = match PublicKey::try_from(homeserver) {
+        let homeserver_public_key = match PublicKey::try_from(homeserver.as_str()) {
             Ok(key) => key,
             Err(error) => {
                 return create_response_vector(
@@ -433,7 +416,7 @@ pub fn sign_up(
         {
             Ok(session) => {
                 let session_secret = session.export_secret();
-                let session_data = session_to_json_with_secret(session.info(), &session_secret);
+                let session_data = session_to_json_with_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
             },
             Err(error) => create_response_vector(true, format!("signup failure: {}", error)),
@@ -451,7 +434,7 @@ pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<Strin
             Err(error) => return create_response_vector(true, error),
         };
 
-        let homeserver_public_key = match PublicKey::try_from(homeserver) {
+        let homeserver_public_key = match PublicKey::try_from(homeserver.as_str()) {
             Ok(key) => key,
             Err(error) => {
                 return create_response_vector(
@@ -487,7 +470,7 @@ pub fn sign_in(secret_key: String) -> Vec<String> {
         match signer.signin().await {
             Ok(session) => {
                 let session_secret = session.export_secret();
-                let session_data = session_to_json_with_secret(session.info(), &session_secret);
+                let session_data = session_to_json_with_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
             },
             Err(error) => create_response_vector(true, format!("Failed to sign in: {}", error)),
@@ -531,9 +514,9 @@ pub fn revalidate_session(session_secret: String) -> Vec<String> {
 
         // Revalidate returns the session info if still valid, None if expired
         match session.revalidate().await {
-            Ok(Some(session_info)) => {
+            Ok(Some(_session_info)) => {
                 let session_secret = session.export_secret();
-                create_response_vector(false, session_to_json_with_secret(&session_info, &session_secret))
+                create_response_vector(false, session_to_json_with_secret(&session, &session_secret))
             },
             Ok(None) => create_response_vector(true, "Session is no longer valid (expired or invalidated)".to_string()),
             Err(error) => create_response_vector(true, format!("Failed to revalidate session: {}", error)),
@@ -616,7 +599,7 @@ pub fn get(url: String) -> Vec<String> {
 pub fn resolve(public_key: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
-        let public_key = match public_key.as_str().try_into() {
+        let public_key: pubky::pkarr::PublicKey = match public_key.as_str().try_into() {
             Ok(key) => key,
             Err(e) => {
                 return create_response_vector(true, format!("Invalid zbase32 encoded key: {}", e))
@@ -638,7 +621,7 @@ pub fn resolve(public_key: String) -> Vec<String> {
                 let signature = &bytes[32..96];
                 let timestamp = signed_packet.timestamp();
                 let dns_packet = &bytes[104..];
-                let hex: String = signed_packet.encode_hex();
+                let hex: String = hex::encode(&bytes);
 
                 let json_obj = json!({
                     "signed_packet": hex,
@@ -707,7 +690,7 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
                     .publish(&signed_packet, None)
                     .await
                 {
-                    Ok(()) => create_response_vector(false, keypair.public_key().to_string()),
+                    Ok(()) => create_response_vector(false, keypair.public_key().z32()),
                     Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
                 }
             }
@@ -836,7 +819,7 @@ pub fn get_homeserver(pubky: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let client = get_pubky_client();
-        let public_key = match PublicKey::try_from(pubky) {
+        let public_key = match PublicKey::try_from(pubky.as_str()) {
             Ok(key) => key,
             Err(error) => {
                 return create_response_vector(true, format!("Invalid public key: {}", error))
@@ -844,7 +827,7 @@ pub fn get_homeserver(pubky: String) -> Vec<String> {
         };
 
         match client.get_homeserver_of(&public_key).await {
-            Some(homeserver) => create_response_vector(false, homeserver.to_string()),
+            Some(homeserver) => create_response_vector(false, homeserver.z32()),
             None => {
                 create_response_vector(true, "No homeserver found for this public key".to_string())
             }
@@ -900,7 +883,7 @@ pub fn start_auth_flow(capabilities_str: String) -> Vec<String> {
         let pubky_client = get_pubky_client();
         let http_client = pubky_client.client().clone();
 
-        let flow = match PubkyAuthFlow::builder(&caps)
+        let flow = match PubkyAuthFlow::builder(&caps, AuthFlowKind::SignIn)
             .client(http_client)
             .start()
         {
@@ -934,7 +917,7 @@ pub fn await_auth_approval() -> Vec<String> {
         match flow.await_approval().await {
             Ok(session) => {
                 let session_secret = session.export_secret();
-                let session_data = session_to_json_with_secret(session.info(), &session_secret);
+                let session_data = session_to_json_with_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
             }
             Err(e) => create_response_vector(true, format!("Auth approval failed: {}", e)),

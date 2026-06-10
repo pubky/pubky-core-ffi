@@ -2,6 +2,29 @@
 
 The Pubky Core Mobile SDK provides native bindings for iOS and Android platforms to interact with Pubky. This SDK allows you to perform operations like publishing content, retrieving data and managing authentication.
 
+## String Contracts
+
+These output formats are intentional and relied upon by downstream consumers
+(react-native-pubky, Pubky Ring, Bitkit). Do not change them without
+coordinating a migration across those apps.
+
+- **Public keys are always bare z-base32** (52 chars, no prefix) in every
+  output: `public_key` fields, the session `pubky` field, `get_homeserver`,
+  and the `publish`/`publish_https` return values. The underlying
+  `pubky` crate (0.9.x) renders `PublicKey::to_string()` as
+  `pubky<z32>`, so all output sites must use `.z32()` instead — pubky's own
+  storage URL parser rejects `pubky://pubky<z32>/...`, and downstream apps
+  build `pubky://<key>/...` URLs from these values. Inputs accept either form.
+- **`uri` fields** use the pkarr URI form `pk:<z32>`.
+- **Response vectors** are `[error, data]` where `error` is the string
+  `"true"` or `"false"`.
+- **`parse_auth_url`** returns `relay`, `capabilities`, `secret`, plus
+  `kind` (`"signin"` or `"signup"`; legacy `pubkyauth:///?...` URLs are
+  `"signin"`) and, for signup links, optional `homeserver` (bare z32) and
+  `signup_token` fields.
+- **Session secrets** are `<z32-pubkey>:<cookie>`, compatible in both
+  directions with sessions created on pubky 0.6.0-rc.6.
+
 ## Building the SDK
 
 ### To build both iOS and Android bindings:

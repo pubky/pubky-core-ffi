@@ -1,5 +1,5 @@
 use bip39::{Language, Mnemonic};
-use pkarr::Keypair;
+use pubky::Keypair;
 
 /**
  * Get a keypair from a secret key
@@ -17,7 +17,7 @@ pub fn get_keypair_from_secret_key(secret_key: &str) -> Result<Keypair, String> 
         }
     };
 
-    Ok(Keypair::from_secret_key(&secret_key_bytes))
+    Ok(Keypair::from_secret(&secret_key_bytes))
 }
 
 /**

@@ -506,11 +506,15 @@ def _uniffi_check_contract_api_version(lib):
 def _uniffi_check_api_checksums(lib):
     if lib.uniffi_pubkycore_checksum_func_auth() != 51826:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_await_auth_approval() != 56488:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_create_recovery_file() != 48846:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_decrypt_recovery_file() != 26407:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_delete_file() != 47931:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_delete_with_session() != 26332:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase() != 2358:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -538,6 +542,8 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_put() != 64514:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_put_with_session() != 17390:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_remove_event_listener() != 23534:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_republish_homeserver() != 63919:
@@ -555,6 +561,8 @@ def _uniffi_check_api_checksums(lib):
     if lib.uniffi_pubkycore_checksum_func_sign_out() != 27163:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_sign_up() != 48789:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_start_auth_flow() != 25681:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_switch_network() != 64215:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -583,6 +591,10 @@ _UniffiLib.uniffi_pubkycore_fn_func_auth.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_auth.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_await_auth_approval.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_await_auth_approval.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_create_recovery_file.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -601,6 +613,12 @@ _UniffiLib.uniffi_pubkycore_fn_func_delete_file.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_delete_file.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_delete_with_session.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_delete_with_session.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_generate_mnemonic_phrase.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -670,6 +688,13 @@ _UniffiLib.uniffi_pubkycore_fn_func_put.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_put.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_put_with_session.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_put_with_session.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_remove_event_listener.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
@@ -717,6 +742,11 @@ _UniffiLib.uniffi_pubkycore_fn_func_sign_up.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_sign_up.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_start_auth_flow.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_start_auth_flow.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_switch_network.argtypes = (
     ctypes.c_int8,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -989,6 +1019,9 @@ _UniffiLib.ffi_pubkycore_rust_future_complete_void.restype = None
 _UniffiLib.uniffi_pubkycore_checksum_func_auth.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_auth.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_await_auth_approval.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_await_auth_approval.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_create_recovery_file.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_create_recovery_file.restype = ctypes.c_uint16
@@ -998,6 +1031,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_decrypt_recovery_file.restype = ctypes
 _UniffiLib.uniffi_pubkycore_checksum_func_delete_file.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_delete_file.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_delete_with_session.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_delete_with_session.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_generate_mnemonic_phrase.restype = ctypes.c_uint16
@@ -1037,6 +1073,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_publish_https.restype = ctypes.c_uint1
 _UniffiLib.uniffi_pubkycore_checksum_func_put.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_put.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_put_with_session.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_put_with_session.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_remove_event_listener.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_remove_event_listener.restype = ctypes.c_uint16
@@ -1064,6 +1103,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_sign_out.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_up.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_up.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_start_auth_flow.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_start_auth_flow.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_switch_network.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_switch_network.restype = ctypes.c_uint16
@@ -1374,6 +1416,10 @@ def auth(url: "str",secret_key: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(secret_key)))
 
 
+def await_auth_approval() -> "typing.List[str]":
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_await_auth_approval,))
+
+
 def create_recovery_file(secret_key: "str",passphrase: "str") -> "typing.List[str]":
     
     
@@ -1396,6 +1442,14 @@ def delete_file(url: "str",secret_key: "str") -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_delete_file,
         _UniffiConverterString.lower(url),
         _UniffiConverterString.lower(secret_key)))
+
+
+def delete_with_session(url: "str",session_secret: "str") -> "typing.List[str]":
+    
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_delete_with_session,
+        _UniffiConverterString.lower(url),
+        _UniffiConverterString.lower(session_secret)))
 
 
 def generate_mnemonic_phrase() -> "typing.List[str]":
@@ -1484,6 +1538,16 @@ def put(url: "str",content: "str",secret_key: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(secret_key)))
 
 
+def put_with_session(url: "str",content: "str",session_secret: "str") -> "typing.List[str]":
+    
+    
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_put_with_session,
+        _UniffiConverterString.lower(url),
+        _UniffiConverterString.lower(content),
+        _UniffiConverterString.lower(session_secret)))
+
+
 def remove_event_listener():
     _rust_call(_UniffiLib.uniffi_pubkycore_fn_func_remove_event_listener,)
 
@@ -1542,6 +1606,12 @@ def sign_up(secret_key: "str",homeserver: "str",signup_token: "typing.Optional[s
         _UniffiConverterOptionalString.lower(signup_token)))
 
 
+def start_auth_flow(capabilities_str: "str") -> "typing.List[str]":
+    
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_start_auth_flow,
+        _UniffiConverterString.lower(capabilities_str)))
+
+
 def switch_network(use_testnet: "bool") -> "typing.List[str]":
     
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_switch_network,
@@ -1557,9 +1627,11 @@ def validate_mnemonic_phrase(mnemonic_phrase: "str") -> "typing.List[str]":
 __all__ = [
     "InternalError",
     "auth",
+    "await_auth_approval",
     "create_recovery_file",
     "decrypt_recovery_file",
     "delete_file",
+    "delete_with_session",
     "generate_mnemonic_phrase",
     "generate_mnemonic_phrase_and_keypair",
     "generate_secret_key",
@@ -1573,6 +1645,7 @@ __all__ = [
     "publish",
     "publish_https",
     "put",
+    "put_with_session",
     "remove_event_listener",
     "republish_homeserver",
     "resolve",
@@ -1582,6 +1655,7 @@ __all__ = [
     "sign_in",
     "sign_out",
     "sign_up",
+    "start_auth_flow",
     "switch_network",
     "validate_mnemonic_phrase",
     "EventNotifier",
