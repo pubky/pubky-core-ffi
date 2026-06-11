@@ -19,10 +19,18 @@ pub fn parse_pubky_auth_url(url_str: &str) -> Result<PubkyAuthDetails, String> {
 
     // pubky 0.9.1 deep links carry the intent in the host position
     // (pubkyauth://signin?... / pubkyauth://signup?...). Legacy URLs
-    // (pubkyauth:///?...) have no host and mean signin.
+    // (pubkyauth:///?...) have no host and mean signin. Unknown intents are
+    // rejected rather than silently treated as signin, matching pubky's own
+    // DeepLink parser.
     let kind = match url.host_str().unwrap_or("") {
+        "" | "signin" => "signin",
         "signup" => "signup",
-        _ => "signin",
+        other => {
+            return Err(format!(
+                "Invalid auth URL intent '{}', expected 'signin' or 'signup'",
+                other
+            ))
+        }
     }
     .to_string();
 

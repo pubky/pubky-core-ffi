@@ -85,7 +85,7 @@ class PubkyManager {
     // Get a signup token
     func getSignupToken(homeserverPubky: String, adminPassword: String) async throws -> String {
         let result = try getSignupToken(homeserverPubky: homeserverPubky, adminPassword: adminPassword)
-        if result[0] == "error" {
+        if result[0] == "true" {
             throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
         }
         return result[1]
@@ -94,7 +94,7 @@ class PubkyManager {
     // Sign up with a homeserver (with optional signup token)
     func signUp(secretKey: String, homeserver: String, signupToken: String? = nil) async throws -> String {
         let result = try signUp(secretKey: secretKey, homeserver: homeserver, signupToken: signupToken)
-        if result[0] == "error" {
+        if result[0] == "true" {
             throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
         }
         return result[1]
@@ -103,7 +103,7 @@ class PubkyManager {
     // Get the homeserver for a Pubky public key
     func getHomeserver(pubky: String) async throws -> String {
         let result = try getHomeserver(pubky: pubky)
-        if result[0] == "error" {
+        if result[0] == "true" {
             throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
         }
         return result[1]
@@ -112,7 +112,7 @@ class PubkyManager {
     // Publish content
     func publishContent(recordName: String, content: String, secretKey: String) async throws -> String {
         let result = try publish(recordName: recordName, recordContent: content, secretKey: secretKey)
-        if result[0] == "error" {
+        if result[0] == "true" {
             throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
         }
         return result[1]
@@ -121,7 +121,7 @@ class PubkyManager {
     // Retrieve content
     func getContent(url: String) async throws -> String {
         let result = try get(url: url)
-        if result[0] == "error" {
+        if result[0] == "true" {
             throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
         }
         return result[1]
@@ -193,7 +193,7 @@ class PubkyManager {
     
     fun generateNewAccount(): String {
         val result = generateSecretKey()
-        if (result[0] == "error") {
+        if (result[0] == "true") {
             throw Exception(result[1])
         }
         val json = JSONObject(result[1])
@@ -202,7 +202,7 @@ class PubkyManager {
     
     suspend fun getSignupToken(homeserverPubky: String, adminPassword: String): String {
         val result = getSignupToken(homeserverPubky, adminPassword)
-        if (result[0] == "error") {
+        if (result[0] == "true") {
             throw Exception(result[1])
         }
         return result[1]
@@ -210,7 +210,7 @@ class PubkyManager {
     
     suspend fun signUp(secretKey: String, homeserver: String, signupToken: String? = null): String {
         val result = signUp(secretKey, homeserver, signupToken)
-        if (result[0] == "error") {
+        if (result[0] == "true") {
             throw Exception(result[1])
         }
         return result[1]
@@ -218,7 +218,7 @@ class PubkyManager {
     
     suspend fun getHomeserver(pubky: String): String {
         val result = getHomeserver(pubky)
-        if (result[0] == "error") {
+        if (result[0] == "true") {
             throw Exception(result[1])
         }
         return result[1]
@@ -226,7 +226,7 @@ class PubkyManager {
     
     suspend fun publishContent(recordName: String, content: String, secretKey: String): String {
         val result = publish(recordName, content, secretKey)
-        if (result[0] == "error") {
+        if (result[0] == "true") {
             throw Exception(result[1])
         }
         return result[1]
@@ -234,7 +234,7 @@ class PubkyManager {
     
     suspend fun getContent(url: String): String {
         val result = get(url)
-        if (result[0] == "error") {
+        if (result[0] == "true") {
             throw Exception(result[1])
         }
         return result[1]
@@ -297,7 +297,7 @@ class MainActivity : AppCompatActivity() {
 // iOS
 func publishHttps(recordName: String, target: String, secretKey: String) async throws -> String {
     let result = try publishHttps(recordName: recordName, target: target, secretKey: secretKey)
-    if result[0] == "error" {
+    if result[0] == "true" {
         throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
     }
     return result[1]
@@ -308,7 +308,7 @@ func publishHttps(recordName: String, target: String, secretKey: String) async t
 // Android
 suspend fun publishHttps(recordName: String, target: String, secretKey: String): String {
     val result = publishHttps(recordName, target, secretKey)
-    if (result[0] == "error") {
+    if (result[0] == "true") {
         throw Exception(result[1])
     }
     return result[1]
@@ -324,7 +324,7 @@ For servers that require authentication control:
 // 1. Admin generates a signup token
 func getServerSignupToken(homeserverPubky: String, adminPassword: String) async throws -> String {
     let result = try getSignupToken(homeserverPubky: homeserverPubky, adminPassword: adminPassword)
-    if result[0] == "error" {
+    if result[0] == "true" {
         throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
     }
     return result[1]
@@ -333,7 +333,7 @@ func getServerSignupToken(homeserverPubky: String, adminPassword: String) async 
 // 2. User signs up with the token
 func signUpWithToken(secretKey: String, homeserver: String, token: String) async throws -> String {
     let result = try signUp(secretKey: secretKey, homeserver: homeserver, signupToken: token)
-    if result[0] == "error" {
+    if result[0] == "true" {
         throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
     }
     return result[1]
@@ -345,7 +345,7 @@ func signUpWithToken(secretKey: String, homeserver: String, token: String) async
 // 1. Admin generates a signup token
 suspend fun getServerSignupToken(homeserverPubky: String, adminPassword: String): String {
     val result = getSignupToken(homeserverPubky, adminPassword)
-    if (result[0] == "error") {
+    if (result[0] == "true") {
         throw Exception(result[1])
     }
     return result[1]
@@ -354,7 +354,7 @@ suspend fun getServerSignupToken(homeserverPubky: String, adminPassword: String)
 // 2. User signs up with the token
 suspend fun signUpWithToken(secretKey: String, homeserver: String, token: String): String {
     val result = signUp(secretKey, homeserver, token)
-    if (result[0] == "error") {
+    if (result[0] == "true") {
         throw Exception(result[1])
     }
     return result[1]
@@ -369,7 +369,7 @@ You can retrieve the homeserver information for a Pubky:
 // iOS
 func findHomeserver(pubkyKey: String) async throws -> String {
     let result = try getHomeserver(pubky: pubkyKey)
-    if result[0] == "error" {
+    if result[0] == "true" {
         throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
     }
     return result[1]
@@ -390,7 +390,7 @@ func checkAndReconnect(pubkyKey: String) async {
 // Android
 suspend fun findHomeserver(pubkyKey: String): String {
     val result = getHomeserver(pubkyKey)
-    if (result[0] == "error") {
+    if (result[0] == "true") {
         throw Exception(result[1])
     }
     return result[1]
@@ -412,7 +412,7 @@ suspend fun checkAndReconnect(pubkyKey: String) {
 // iOS
 func createRecoveryFile(secretKey: String, passphrase: String) throws -> String {
     let result = try createRecoveryFile(secretKey: secretKey, passphrase: passphrase)
-    if result[0] == "error" {
+    if result[0] == "true" {
         throw NSError(domain: "PubkyError", code: -1, userInfo: [NSLocalizedDescriptionKey: result[1]])
     }
     return result[1]
@@ -423,7 +423,7 @@ func createRecoveryFile(secretKey: String, passphrase: String) throws -> String 
 // Android
 fun createRecoveryFile(secretKey: String, passphrase: String): String {
     val result = createRecoveryFile(secretKey, passphrase)
-    if (result[0] == "error") {
+    if (result[0] == "true") {
         throw Exception(result[1])
     }
     return result[1]
@@ -432,7 +432,7 @@ fun createRecoveryFile(secretKey: String, passphrase: String): String {
 
 ## Error Handling
 All methods return a `Vec<String>` where:
-- The first element ([0]) is either "success" or "error"
+- The first element ([0]) is the error flag: "true" if the call failed, "false" on success
 - The second element ([1]) contains either the result data or error message
 
 It's recommended to wrap all calls in try-catch blocks and handle errors appropriately in your application.

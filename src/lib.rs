@@ -272,7 +272,9 @@ pub fn publish_https(record_name: String, target: String, secret_key: String) ->
 pub fn resolve_https(public_key: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
-        let public_key: pubky::pkarr::PublicKey = match public_key.as_str().try_into() {
+        // pubky::PublicKey accepts both bare z32 and "pubky"-prefixed input;
+        // z32() renders the bare form required by the output contract.
+        let public_key = match PublicKey::try_from(public_key.as_str()) {
             Ok(key) => key,
             Err(e) => return create_response_vector(true, format!("Invalid public key: {}", e)),
         };
@@ -319,7 +321,7 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
 
                 // Create JSON response
                 let json_obj = json!({
-                    "public_key": public_key.to_string(),
+                    "public_key": public_key.z32(),
                     "https_records": https_records,
                     "last_seen": signed_packet.last_seen(),
                     "timestamp": signed_packet.timestamp(),
@@ -619,7 +621,8 @@ pub fn get(url: String) -> Vec<String> {
 pub fn resolve(public_key: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
-        let public_key: pubky::pkarr::PublicKey = match public_key.as_str().try_into() {
+        // pubky::PublicKey accepts both bare z32 and "pubky"-prefixed input.
+        let public_key = match PublicKey::try_from(public_key.as_str()) {
             Ok(key) => key,
             Err(e) => {
                 return create_response_vector(true, format!("Invalid zbase32 encoded key: {}", e))

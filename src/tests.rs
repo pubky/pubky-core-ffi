@@ -298,6 +298,19 @@ mod tests {
         assert!(json.get("signup_token").is_none());
     }
 
+    // Unknown intents must be rejected, not silently treated as signin
+    #[test]
+    fn test_parse_auth_url_unknown_intent_rejected() {
+        let typo_url = "pubkyauth://sigup?caps=/pub/pubky.app/:rw&secret=U55XnoH6vsMCpx1pxHtt8fReVg4Brvu9C0gUBuw-Jkw&relay=https://httprelay.pubky.app/inbox";
+        let result = parse_auth_url(typo_url.to_string());
+        assert_eq!(result[0], "true");
+        assert!(
+            result[1].contains("Invalid auth URL intent"),
+            "unexpected error: {}",
+            result[1]
+        );
+    }
+
     // Test error cases
     #[test]
     fn test_error_cases() {
