@@ -582,6 +582,36 @@ pub fn put(url: String, content: String, secret_key: String) -> Vec<String> {
 }
 
 #[uniffi::export]
+pub fn put_bytes(url: String, content: Vec<u8>, secret_key: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+        let keypair = match get_keypair_from_secret_key(&secret_key) {
+            Ok(keypair) => keypair,
+            Err(error) => return create_response_vector(true, error),
+        };
+
+        let signer = client.signer(keypair);
+        let session = match signer.signin().await {
+            Ok(session) => session,
+            Err(error) => return create_response_vector(true, format!("Failed to sign in: {}", error)),
+        };
+
+        let trimmed_url = url.trim_end_matches('/');
+        let path = if let Some(path_start) = trimmed_url.find("/pub/") {
+            &trimmed_url[path_start..]
+        } else {
+            return create_response_vector(true, "Invalid URL: must contain /pub/".to_string());
+        };
+
+        match session.storage().put(path, content).await {
+            Ok(_) => create_response_vector(false, trimmed_url.to_string()),
+            Err(error) => create_response_vector(true, format!("Failed to put: {}", error)),
+        }
+    })
+}
+
+#[uniffi::export]
 pub fn get(url: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
@@ -608,6 +638,30 @@ pub fn get(url: String) -> Vec<String> {
                 create_response_vector(false, format!("base64:{}", base64_str))
             }
         }
+    })
+}
+
+#[uniffi::export]
+pub fn get_bytes(url: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+        let trimmed_url = url.trim_end_matches('/');
+
+        let public_storage = client.public_storage();
+        let response = match public_storage.get(trimmed_url).await {
+            Ok(res) => res,
+            Err(e) => return create_response_vector(true, format!("Request failed: {}", e)),
+        };
+
+        let bytes = match response.bytes().await {
+            Ok(b) => b,
+            Err(e) => {
+                return create_response_vector(true, format!("Error reading response: {}", e))
+            }
+        };
+        let base64_str = base64_engine.encode(&bytes);
+        create_response_vector(false, base64_str)
     })
 }
 
@@ -719,7 +773,13 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
     })
 }
 #[uniffi::export]
-pub fn list(url: String) -> Vec<String> {
+pub fn list(
+    url: String,
+    cursor: Option<String>,
+    reverse: Option<bool>,
+    limit: Option<u16>,
+    shallow: Option<bool>,
+) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let client = get_pubky_client();
@@ -729,7 +789,7 @@ pub fn list(url: String) -> Vec<String> {
 
         // Use public storage for unauthenticated listings
         let public_storage = client.public_storage();
-        let list_builder = match public_storage.list(&trimmed_url) {
+        let mut list_builder = match public_storage.list(&trimmed_url) {
             Ok(list) => list,
             Err(error) => {
                 return create_response_vector(
@@ -738,6 +798,19 @@ pub fn list(url: String) -> Vec<String> {
                 )
             }
         };
+
+        if let Some(c) = cursor.as_deref() {
+            list_builder = list_builder.cursor(c);
+        }
+        if let Some(r) = reverse {
+            list_builder = list_builder.reverse(r);
+        }
+        if let Some(l) = limit {
+            list_builder = list_builder.limit(l);
+        }
+        if let Some(s) = shallow {
+            list_builder = list_builder.shallow(s);
+        }
 
         let resources = match list_builder.send().await {
             Ok(res) => res,
