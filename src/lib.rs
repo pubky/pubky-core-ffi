@@ -1051,6 +1051,38 @@ pub fn put_with_session(url: String, content: String, session_secret: String) ->
 }
 
 #[uniffi::export]
+pub fn put_bytes_with_session(
+    url: String,
+    content: Vec<u8>,
+    session_secret: String,
+) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let pubky_client = get_pubky_client();
+        let http_client = pubky_client.client().clone();
+
+        let session = match PubkySession::import_secret(&session_secret, Some(http_client)).await {
+            Ok(s) => s,
+            Err(e) => {
+                return create_response_vector(true, format!("Failed to import session: {}", e))
+            }
+        };
+
+        let trimmed_url = url.trim_end_matches('/');
+        let path = if let Some(path_start) = trimmed_url.find("/pub/") {
+            &trimmed_url[path_start..]
+        } else {
+            return create_response_vector(true, "Invalid URL: must contain /pub/".to_string());
+        };
+
+        match session.storage().put(path, content).await {
+            Ok(_) => create_response_vector(false, trimmed_url.to_string()),
+            Err(e) => create_response_vector(true, format!("Failed to put: {}", e)),
+        }
+    })
+}
+
+#[uniffi::export]
 pub fn delete_with_session(url: String, session_secret: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
