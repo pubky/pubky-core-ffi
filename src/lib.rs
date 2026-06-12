@@ -1050,6 +1050,18 @@ pub fn put_with_session(url: String, content: String, session_secret: String) ->
     })
 }
 
+/// Derive a pubky-app-specs tag id: Crockford-base32 of the first half of
+/// blake3("{uri}:{label}"). Mirrors `HashId::create_id` in pubky-app-specs so
+/// records written to `/pub/pubky.app/tags/{id}` pass indexer validation.
+/// `label` must already be sanitized (trimmed, lowercase) per the spec.
+#[uniffi::export]
+pub fn create_tag_id(uri: String, label: String) -> Vec<String> {
+    let hash = blake3::hash(format!("{}:{}", uri, label).as_bytes());
+    let half = &hash.as_bytes()[..hash.as_bytes().len() / 2];
+    let id = base32::encode(base32::Alphabet::Crockford, half);
+    create_response_vector(false, id)
+}
+
 #[uniffi::export]
 pub fn put_bytes_with_session(
     url: String,
