@@ -1,5 +1,7 @@
 mod auth;
 mod keypair;
+#[cfg(target_os = "android")]
+mod rustls_init;
 mod tests;
 mod types;
 mod utils;
@@ -761,6 +763,23 @@ pub fn list(url: String) -> Vec<String> {
     })
 }
 
+/// Format an error together with its full `source()` chain.
+///
+/// reqwest/pubky errors only show their top-level message via `Display` (e.g.
+/// "error sending request for url (...)"), hiding the real cause (TLS/cert, connect,
+/// dns) in the source chain. Walking it surfaces e.g. "...: invalid peer certificate:
+/// NotValidYet", which is what we need to diagnose device-specific transport failures.
+fn full_error_chain<E: std::error::Error>(error: &E) -> String {
+    let mut out = error.to_string();
+    let mut source = error.source();
+    while let Some(e) = source {
+        out.push_str(": ");
+        out.push_str(&e.to_string());
+        source = e.source();
+    }
+    out
+}
+
 #[uniffi::export]
 pub fn auth(url: String, secret_key: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
@@ -774,7 +793,10 @@ pub fn auth(url: String, secret_key: String) -> Vec<String> {
         let signer = client.signer(keypair);
         match signer.approve_auth(&url).await {
             Ok(_) => create_response_vector(false, "Authorization success".to_string()),
-            Err(error) => create_response_vector(true, format!("Authorization failure: {}", error)),
+            Err(error) => create_response_vector(
+                true,
+                format!("Authorization failure: {}", full_error_chain(&error)),
+            ),
         }
     })
 }
