@@ -1,6 +1,6 @@
 [package]
 name = "pubkycore"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,8 +19,18 @@ url = "2.5.2"
 base64 = "0.22.1"
 once_cell = "1.19.0"
 reqwest = { version = "0.12.0", default-features = false, features = ["rustls-tls"] }
-pubky = "0.9.1"
+pubky = "0.9.3"
 bip39 = { version = "2.2.0", features = ["rand"] }
+
+# Android-only: pkarr's relay HTTP client (via reqwest 0.13's `rustls` feature) uses
+# rustls-platform-verifier, which must be handed the JVM + app Context once at startup
+# before any TLS handshake. We expose a JNI entrypoint (see src/rustls_init.rs) that the
+# Kotlin wrapper calls. Versions are pinned to match what pubky resolves so the
+# rustls-platform-verifier `GLOBAL` static is the same instance across the dep graph.
+# Still required until pkarr's relay client stops using the platform verifier (pkarr #262).
+[target.'cfg(target_os = "android")'.dependencies]
+rustls-platform-verifier = "0.7.0"
+jni = "0.22.4"
 
 [dev-dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
