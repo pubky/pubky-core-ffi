@@ -11,7 +11,7 @@ coordinating a migration across those apps.
 - **Public keys are always bare z-base32** (52 chars, no prefix) in every
   output: `public_key` fields, the session `pubky` field, `get_homeserver`,
   and the `publish`/`publish_https` return values. The underlying
-  `pubky` crate (0.9.x) renders `PublicKey::to_string()` as
+  `pubky` crate (0.10.x) renders `PublicKey::to_string()` as
   `pubky<z32>`, so all output sites must use `.z32()` instead — pubky's own
   storage URL parser rejects `pubky://pubky<z32>/...`, and downstream apps
   build `pubky://<key>/...` URLs from these values. Inputs accept either form.
@@ -22,8 +22,20 @@ coordinating a migration across those apps.
   `kind` (`"signin"` or `"signup"`; legacy `pubkyauth:///?...` URLs are
   `"signin"`) and, for signup links, optional `homeserver` (bare z32) and
   `signup_token` fields.
-- **Session secrets** are `<z32-pubkey>:<cookie>`, compatible in both
-  directions with sessions created on pubky 0.6.0-rc.6.
+- **Authentication mirrors pubky 0.10.** Grant auth is exposed through
+  `sign_up_grant`, `sign_in_grant`, `start_grant_auth_flow`, and
+  `await_grant_auth_approval`; these return `grant_secret` in session JSON.
+  The unqualified `sign_up`, `sign_in`, `start_auth_flow`, and
+  `await_auth_approval` names are Grant aliases for downstream migration.
+- **Legacy cookie auth remains available** through `sign_up_cookie`,
+  `sign_in_cookie`, `start_cookie_auth_flow`, and
+  `await_cookie_auth_approval`; these return `session_secret` in session JSON.
+  Cookie auth is deprecated upstream, but it is still exposed here because this
+  crate is a low-level binding layer.
+- **Session-token APIs accept either strategy.** `sign_out`,
+  `revalidate_session`, `put_with_session`, and `delete_with_session` call
+  `Pubky::restore_session`, so they accept a Grant `grant_secret` or a legacy
+  cookie `session_secret`.
 
 ## Building the SDK
 

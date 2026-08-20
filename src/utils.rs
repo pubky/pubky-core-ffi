@@ -10,7 +10,7 @@ use std::error::Error;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 // Serialize a single SVCB/HTTPS service parameter into JSON. In simple-dns 0.11
-// (pkarr 6) params are a typed `SVCParam` enum rather than raw key/value bytes.
+// (via pkarr) params are a typed `SVCParam` enum rather than raw key/value bytes.
 fn svc_param_to_json(param: &SVCParam) -> serde_json::Value {
     match param {
         SVCParam::Mandatory(keys) => json!(keys.iter().copied().collect::<Vec<u16>>()),
@@ -227,7 +227,18 @@ pub fn session_to_json(session: &PubkySession) -> String {
     serde_json::to_string(&json_obj).unwrap_or_else(|e| format!("Failed to serialize JSON: {}", e))
 }
 
-pub fn session_to_json_with_secret(session: &PubkySession, session_secret: &str) -> String {
+pub fn session_to_json_with_grant_secret(session: &PubkySession, grant_secret: &str) -> String {
+    let info = session.info();
+    let json_obj = json!({
+        "pubky": info.public_key().z32(),
+        "capabilities": info.capabilities().iter().map(|c| c.to_string()).collect::<Vec<String>>(),
+        "grant_secret": grant_secret,
+    });
+
+    serde_json::to_string(&json_obj).unwrap_or_else(|e| format!("Failed to serialize JSON: {}", e))
+}
+
+pub fn session_to_json_with_cookie_secret(session: &PubkySession, session_secret: &str) -> String {
     let info = session.info();
     let json_obj = json!({
         "pubky": info.public_key().z32(),

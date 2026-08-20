@@ -1,91 +1,219 @@
 // Note: The authorize function has been moved inline into the auth() function in lib.rs
 // using the new approve_auth API from PubkySigner
 
-use crate::{Capability, PubkyAuthDetails};
+use crate::{Capability, PubkyAuthDetails, PubkyDeepLinkDetails};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use pubky::deep_links::{DeepLink, XCallbackParams};
+use pubky::Capabilities;
 use serde_json;
-use std::collections::HashMap;
-use url::Url;
+use std::str::FromStr;
 
 pub fn pubky_auth_details_to_json(details: &PubkyAuthDetails) -> Result<String, String> {
     serde_json::to_string(details).map_err(|_| "Error serializing to JSON".to_string())
 }
 
+pub fn pubky_deep_link_details_to_json(details: &PubkyDeepLinkDetails) -> Result<String, String> {
+    serde_json::to_string(details).map_err(|_| "Error serializing to JSON".to_string())
+}
+
 pub fn parse_pubky_auth_url(url_str: &str) -> Result<PubkyAuthDetails, String> {
-    let url = Url::parse(url_str).map_err(|_| "Invalid URL".to_string())?;
-
-    if url.scheme() != "pubkyauth" {
-        return Err("Invalid scheme, expected 'pubkyauth'".to_string());
+    let details = parse_pubky_deep_link(url_str)?;
+    match details.kind.as_str() {
+        "signin" | "signup" | "signin_grant" | "signup_grant" => Ok(PubkyAuthDetails {
+            relay: details.relay.ok_or_else(|| "Missing relay".to_string())?,
+            capabilities: details.capabilities.unwrap_or_default(),
+            secret: details.secret.ok_or_else(|| "Missing secret".to_string())?,
+            kind: details.kind,
+            homeserver: details.homeserver,
+            signup_token: details.signup_token,
+            client_id: details.client_id,
+            client_public_key: details.client_public_key,
+            x_source: details.x_source,
+            x_success: details.x_success,
+            x_error: details.x_error,
+            x_cancel: details.x_cancel,
+        }),
+        other => Err(format!("Invalid auth URL intent '{}'", other)),
     }
+}
 
-    // pubky 0.9.1 deep links carry the intent in the host position
-    // (pubkyauth://signin?... / pubkyauth://signup?...). Legacy URLs
-    // (pubkyauth:///?...) have no host and mean signin. Unknown intents are
-    // rejected rather than silently treated as signin, matching pubky's own
-    // DeepLink parser.
-    let kind = match url.host_str().unwrap_or("") {
-        "" | "signin" => "signin",
-        "signup" => "signup",
-        other => {
-            return Err(format!(
-                "Invalid auth URL intent '{}', expected 'signin' or 'signup'",
-                other
-            ))
+pub fn parse_pubky_deep_link(url_str: &str) -> Result<PubkyDeepLinkDetails, String> {
+    let deep_link = DeepLink::from_str(url_str).map_err(|error| error.to_string())?;
+    Ok(deep_link_details(&deep_link))
+}
+
+fn deep_link_details(deep_link: &DeepLink) -> PubkyDeepLinkDetails {
+    let callbacks = deep_link.x_callback();
+    match deep_link {
+        DeepLink::Signin(link) => {
+            let params = link.params();
+            auth_deep_link_details(
+                link.scheme().as_str(),
+                link.intent(),
+                link.to_string(),
+                params.relay.to_string(),
+                &params.capabilities,
+                &params.secret,
+                None,
+                None,
+                None,
+                None,
+                callbacks,
+            )
+        }
+        DeepLink::Signup(link) => {
+            let params = link.params();
+            auth_deep_link_details(
+                link.scheme().as_str(),
+                link.intent(),
+                link.to_string(),
+                params.relay.to_string(),
+                &params.capabilities,
+                &params.secret,
+                Some(params.homeserver.z32()),
+                params.signup_token.clone(),
+                None,
+                None,
+                callbacks,
+            )
+        }
+        DeepLink::DirectSignup(link) => {
+            let params = link.params();
+            non_auth_deep_link_details(
+                link.scheme().as_str(),
+                link.intent(),
+                link.to_string(),
+                Some(params.homeserver.z32()),
+                params.signup_token.clone(),
+                None,
+                None,
+                None,
+                callbacks,
+            )
+        }
+        DeepLink::SigninGrant(link) => {
+            let params = link.params();
+            auth_deep_link_details(
+                link.scheme().as_str(),
+                link.intent(),
+                link.to_string(),
+                params.relay.to_string(),
+                &params.capabilities,
+                &params.secret,
+                None,
+                None,
+                Some(params.client_id.to_string()),
+                Some(params.client_pk.z32()),
+                callbacks,
+            )
+        }
+        DeepLink::SignupGrant(link) => {
+            let params = link.params();
+            auth_deep_link_details(
+                link.scheme().as_str(),
+                link.intent(),
+                link.to_string(),
+                params.relay.to_string(),
+                &params.capabilities,
+                &params.secret,
+                Some(params.homeserver.z32()),
+                params.signup_token.clone(),
+                Some(params.client_id.to_string()),
+                Some(params.client_pk.z32()),
+                callbacks,
+            )
+        }
+        DeepLink::SeedExport(link) => {
+            let params = link.params();
+            non_auth_deep_link_details(
+                link.scheme().as_str(),
+                link.intent(),
+                link.to_string(),
+                None,
+                None,
+                Some(URL_SAFE_NO_PAD.encode(params.secret)),
+                None,
+                None,
+                callbacks,
+            )
         }
     }
-    .to_string();
+}
 
-    // Collect query pairs into a HashMap for efficient access
-    let query_params: HashMap<_, _> = url.query_pairs().into_owned().collect();
-
-    let relay = query_params
-        .get("relay")
-        .cloned()
-        .ok_or_else(|| "Missing relay".to_string())?;
-
-    let secret = query_params
-        .get("secret")
-        .cloned()
-        .ok_or_else(|| "Missing secret".to_string())?;
-
-    let capabilities_str = query_params
-        .get("capabilities")
-        .or_else(|| query_params.get("caps"))
-        .cloned()
-        .unwrap_or_default();
-
-    // Parse capabilities
-    let capabilities = if capabilities_str.is_empty() {
-        Vec::new()
-    } else {
-        capabilities_str
-            .split(',')
-            .map(|capability| {
-                let mut parts = capability.splitn(2, ':');
-                let path = parts
-                    .next()
-                    .ok_or_else(|| format!("Invalid capability format in '{}'", capability))?;
-                let permission = parts
-                    .next()
-                    .ok_or_else(|| format!("Invalid capability format in '{}'", capability))?;
-                Ok(Capability {
-                    path: path.to_string(),
-                    permission: permission.to_string(),
-                })
-            })
-            .collect::<Result<Vec<_>, String>>()?
-    };
-
-    // Signup links (pubky 0.9.1) also carry the homeserver public key and an
-    // optional signup token: ...&hs={homeserver_z32}&st={signup_token}
-    let homeserver = query_params.get("hs").cloned().filter(|v| !v.is_empty());
-    let signup_token = query_params.get("st").cloned().filter(|v| !v.is_empty());
-
-    Ok(PubkyAuthDetails {
-        relay,
-        capabilities,
-        secret,
-        kind,
+#[allow(clippy::too_many_arguments)]
+fn auth_deep_link_details(
+    scheme: &str,
+    kind: &str,
+    url: String,
+    relay: String,
+    capabilities: &Capabilities,
+    secret: &[u8; 32],
+    homeserver: Option<String>,
+    signup_token: Option<String>,
+    client_id: Option<String>,
+    client_public_key: Option<String>,
+    callbacks: &XCallbackParams,
+) -> PubkyDeepLinkDetails {
+    PubkyDeepLinkDetails {
+        scheme: scheme.to_string(),
+        kind: kind.to_string(),
+        url,
+        relay: Some(relay),
+        capabilities: Some(convert_capabilities(capabilities)),
+        secret: Some(URL_SAFE_NO_PAD.encode(secret)),
         homeserver,
         signup_token,
-    })
+        client_id,
+        client_public_key,
+        x_source: callbacks.x_source.clone(),
+        x_success: callbacks.x_success.clone(),
+        x_error: callbacks.x_error.clone(),
+        x_cancel: callbacks.x_cancel.clone(),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn non_auth_deep_link_details(
+    scheme: &str,
+    kind: &str,
+    url: String,
+    homeserver: Option<String>,
+    signup_token: Option<String>,
+    secret: Option<String>,
+    client_id: Option<String>,
+    client_public_key: Option<String>,
+    callbacks: &XCallbackParams,
+) -> PubkyDeepLinkDetails {
+    PubkyDeepLinkDetails {
+        scheme: scheme.to_string(),
+        kind: kind.to_string(),
+        url,
+        relay: None,
+        capabilities: None,
+        secret,
+        homeserver,
+        signup_token,
+        client_id,
+        client_public_key,
+        x_source: callbacks.x_source.clone(),
+        x_success: callbacks.x_success.clone(),
+        x_error: callbacks.x_error.clone(),
+        x_cancel: callbacks.x_cancel.clone(),
+    }
+}
+
+fn convert_capabilities(capabilities: &Capabilities) -> Vec<Capability> {
+    capabilities
+        .iter()
+        .map(|capability| {
+            let capability = capability.to_string();
+            let (path, permission) = capability
+                .rsplit_once(':')
+                .unwrap_or((capability.as_str(), ""));
+            Capability {
+                path: path.to_string(),
+                permission: permission.to_string(),
+            }
+        })
+        .collect()
 }

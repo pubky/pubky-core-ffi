@@ -2,18 +2,38 @@
 mod tests {
     use crate::generate_keypair;
     use crate::*;
-    use base64;
     use pubky::Keypair;
     use std::string::ToString;
     use tokio;
 
     const HOMESERVER: &str = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
+    const CLIENT_ID: &str = "pubky-core-ffi.test";
 
     fn get_test_setup() -> (Keypair, String, String) {
         let keypair = generate_keypair();
         let secret_key = hex::encode(keypair.secret_key());
         let homeserver = HOMESERVER.to_string();
         (keypair, secret_key, homeserver)
+    }
+
+    fn signup_token() -> Option<String> {
+        std::env::var("PUBKY_TEST_SIGNUP_TOKEN")
+            .ok()
+            .filter(|token| !token.is_empty())
+    }
+
+    fn sign_up_for_test(secret_key: String, homeserver: String) -> Option<Vec<String>> {
+        let token = signup_token();
+        let result = sign_up(secret_key, homeserver, token, CLIENT_ID.to_string());
+        if result[0] == "true" && result[1].contains("Token required") {
+            eprintln!(
+                "Skipping signup-dependent test: homeserver requires PUBKY_TEST_SIGNUP_TOKEN"
+            );
+            return None;
+        }
+
+        assert_eq!(result[0], "false", "Sign up result: {:?}", result);
+        Some(result)
     }
 
     // Test keypair generation
@@ -25,12 +45,18 @@ mod tests {
         let url = format!("pubky://{}/pub/test.com/testfile", public_key);
         let content = "test content".to_string();
 
-        let _sign_up_result = sign_up(secret_key.clone(), homeserver, None);
-        // assert_eq!(sign_up_result[0], "false");
+        if sign_up_for_test(secret_key.clone(), homeserver).is_none() {
+            return;
+        }
 
         let inner_url = url.clone();
 
-        let put_result = put(url.clone(), content.clone(), secret_key.clone());
+        let put_result = put(
+            url.clone(),
+            content.clone(),
+            secret_key.clone(),
+            CLIENT_ID.to_string(),
+        );
         assert_eq!(put_result[0], "false");
 
         // Add a small delay to ensure the put operation completes
@@ -59,7 +85,7 @@ mod tests {
     }
 
     // Guard the bare-z32 public key output contract (see README "String
-    // Contracts"). pubky 0.9.x renders PublicKey::to_string() as
+    // Contracts"). pubky 0.10.x renders PublicKey::to_string() as
     // "pubky<z32>" (57 chars); FFI outputs must stay bare z32 (52 chars) or
     // downstream pubky:// URL building breaks. We assert on length rather
     // than a "pubky" prefix because all five prefix letters are in the
@@ -176,16 +202,21 @@ mod tests {
         let (_, secret_key, homeserver) = get_test_setup();
 
         // First sign up
-        let sign_up_result = sign_up(secret_key.clone(), homeserver, None);
-        println!("Sign up result: {:?}", sign_up_result);
-        assert_eq!(sign_up_result[0], "false");
+        if sign_up_for_test(secret_key.clone(), homeserver).is_none() {
+            return;
+        }
 
         // Test sign in
-        let sign_in_result = sign_in(secret_key.clone());
+        let sign_in_result = sign_in(secret_key.clone(), CLIENT_ID.to_string());
         assert_eq!(sign_in_result[0], "false");
+        let session: serde_json::Value = serde_json::from_str(&sign_in_result[1]).unwrap();
+        let grant_secret = session["grant_secret"]
+            .as_str()
+            .expect("grant_secret missing")
+            .to_string();
 
         // Test sign out
-        let sign_out_result = sign_out(secret_key);
+        let sign_out_result = sign_out(grant_secret);
         assert_eq!(sign_out_result[0], "false");
     }
 
@@ -195,23 +226,28 @@ mod tests {
         let (keypair, secret_key, homeserver) = get_test_setup();
 
         // First sign up
-        let sign_up_result = sign_up(secret_key.clone(), homeserver, None);
-        println!("Sign up result: {:?}", sign_up_result);
-        assert_eq!(sign_up_result[0], "false");
+        if sign_up_for_test(secret_key.clone(), homeserver).is_none() {
+            return;
+        }
 
         let public_key = keypair.public_key().z32();
         let url = format!("pubky://{}/pub/test.com/testfile", public_key);
         let content = "test content".to_string();
 
         // Put some content first
-        let put_result = put(url.clone(), content, secret_key.clone());
+        let put_result = put(
+            url.clone(),
+            content,
+            secret_key.clone(),
+            CLIENT_ID.to_string(),
+        );
         println!("Put result: {:?}", put_result);
         assert_eq!(put_result[0], "false");
 
         std::thread::sleep(std::time::Duration::from_secs(2));
 
         // Test delete
-        let delete_result = delete_file(url.clone(), secret_key.clone());
+        let delete_result = delete_file(url.clone(), secret_key.clone(), CLIENT_ID.to_string());
         println!("Delete result: {:?}", delete_result);
         assert_eq!(delete_result[0], "false");
         assert_eq!(delete_result[1], "Deleted successfully");
@@ -274,6 +310,21 @@ mod tests {
         assert!(json.get("homeserver").is_none());
     }
 
+    // Test auth URL parsing (pubky 0.10 Grant signin format)
+    #[test]
+    fn test_parse_auth_url_signin_grant_host() {
+        let client_pubky = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
+        let test_url = format!("pubkyauth://signin_grant?caps=/pub/pubky.app/:rw&secret=U55XnoH6vsMCpx1pxHtt8fReVg4Brvu9C0gUBuw-Jkw&relay=https://httprelay.pubky.app/inbox&cid=pubky-ring&cpk={client_pubky}");
+        let result = parse_auth_url(test_url.to_string());
+        assert_eq!(result[0], "false");
+
+        let json: serde_json::Value = serde_json::from_str(&result[1]).unwrap();
+        assert_eq!(json["kind"], "signin_grant");
+        assert_eq!(json["client_id"], "pubky-ring");
+        assert_eq!(json["client_public_key"], client_pubky);
+        assert!(json.get("homeserver").is_none());
+    }
+
     // Test auth URL parsing (pubky 0.9.1 signup format with hs/st params)
     #[test]
     fn test_parse_auth_url_signup() {
@@ -298,6 +349,67 @@ mod tests {
         assert!(json.get("signup_token").is_none());
     }
 
+    // Test auth URL parsing (pubky 0.10 Grant signup format with hs/st params)
+    #[test]
+    fn test_parse_auth_url_signup_grant() {
+        let client_pubky = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
+        let test_url = format!("pubkyauth://signup_grant?caps=/pub/pubky.app/:rw&secret=U55XnoH6vsMCpx1pxHtt8fReVg4Brvu9C0gUBuw-Jkw&relay=https://httprelay.pubky.app/inbox&hs=ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy&st=ABCD-1234&cid=pubky-ring&cpk={client_pubky}");
+        let result = parse_auth_url(test_url.to_string());
+        assert_eq!(result[0], "false");
+
+        let json: serde_json::Value = serde_json::from_str(&result[1]).unwrap();
+        assert_eq!(json["kind"], "signup_grant");
+        assert_eq!(
+            json["homeserver"],
+            "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy"
+        );
+        assert_eq!(json["signup_token"], "ABCD-1234");
+        assert_eq!(json["client_id"], "pubky-ring");
+        assert_eq!(json["client_public_key"], client_pubky);
+    }
+
+    #[test]
+    fn test_parse_auth_url_signin_grant_requires_client_pubky() {
+        let test_url = "pubkyauth://signin_grant?caps=/pub/pubky.app/:rw&secret=U55XnoH6vsMCpx1pxHtt8fReVg4Brvu9C0gUBuw-Jkw&relay=https://httprelay.pubky.app/inbox&cid=pubky-ring";
+        let result = parse_auth_url(test_url.to_string());
+        assert_eq!(result[0], "true");
+        assert!(result[1].contains("cpk"), "unexpected error: {}", result[1]);
+    }
+
+    #[test]
+    fn test_parse_deep_link_direct_signup() {
+        let test_url =
+            "pubkyauth://direct_signup?hs=ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy&st=ABCD-1234";
+        let result = parse_deep_link(test_url.to_string());
+        assert_eq!(result[0], "false");
+
+        let json: serde_json::Value = serde_json::from_str(&result[1]).unwrap();
+        assert_eq!(json["scheme"], "pubkyauth");
+        assert_eq!(json["kind"], "direct_signup");
+        assert_eq!(
+            json["homeserver"],
+            "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy"
+        );
+        assert_eq!(json["signup_token"], "ABCD-1234");
+        assert!(json.get("relay").is_none());
+    }
+
+    #[test]
+    fn test_parse_deep_link_secret_export() {
+        let test_url =
+            "pubkyring://secret_export?secret=U55XnoH6vsMCpx1pxHtt8fReVg4Brvu9C0gUBuw-Jkw";
+        let result = parse_deep_link(test_url.to_string());
+        assert_eq!(result[0], "false");
+
+        let json: serde_json::Value = serde_json::from_str(&result[1]).unwrap();
+        assert_eq!(json["scheme"], "pubkyring");
+        assert_eq!(json["kind"], "secret_export");
+        assert_eq!(
+            json["secret"],
+            "U55XnoH6vsMCpx1pxHtt8fReVg4Brvu9C0gUBuw-Jkw"
+        );
+    }
+
     // Unknown intents must be rejected, not silently treated as signin
     #[test]
     fn test_parse_auth_url_unknown_intent_rejected() {
@@ -305,17 +417,28 @@ mod tests {
         let result = parse_auth_url(typo_url.to_string());
         assert_eq!(result[0], "true");
         assert!(
-            result[1].contains("Invalid auth URL intent"),
+            result[1].contains("Invalid intent"),
             "unexpected error: {}",
             result[1]
         );
+    }
+
+    #[test]
+    fn test_auth_strategy_entrypoints_are_explicit() {
+        let cookie_result = await_cookie_auth_approval();
+        assert_eq!(cookie_result[0], "true");
+        assert_eq!(cookie_result[1], "No auth flow in progress");
+
+        let grant_result = await_grant_auth_approval();
+        assert_eq!(grant_result[0], "true");
+        assert_eq!(grant_result[1], "No auth flow in progress");
     }
 
     // Test error cases
     #[test]
     fn test_error_cases() {
         // Test invalid secret key
-        let sign_in_result = sign_in("invalid_key".to_string());
+        let sign_in_result = sign_in("invalid_key".to_string(), CLIENT_ID.to_string());
         assert_eq!(sign_in_result[0], "true");
 
         // Test invalid URL
@@ -336,9 +459,9 @@ mod tests {
         let (_, secret_key, homeserver) = get_test_setup();
 
         // First sign up to ensure the user exists
-        let sign_up_result = sign_up(secret_key.clone(), homeserver.clone(), None);
-        println!("Sign up result: {:?}", sign_up_result);
-        assert_eq!(sign_up_result[0], "false");
+        if sign_up_for_test(secret_key.clone(), homeserver.clone()).is_none() {
+            return;
+        }
 
         // Test republish homeserver
         let republish_result = republish_homeserver(secret_key, homeserver);

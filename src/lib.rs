@@ -19,10 +19,15 @@ use hex;
 use once_cell::sync::Lazy;
 use pubky::pkarr::dns::rdata::{RData, SVCParam, HTTPS, SVCB};
 use pubky::pkarr::dns::{Packet, ResourceRecord};
+use pubky::pkarr::ResolvePolicy;
 use pubky::pkarr::Timestamp;
 use pubky::pkarr::{dns, SignedPacket};
 use pubky::recovery_file;
-use pubky::{AuthFlowKind, Capabilities, Pubky, PubkyAuthFlow, PubkySession, PublicKey};
+#[allow(deprecated)]
+use pubky::{
+    AuthFlowKind, Capabilities, ClientId, Pubky, PubkyCookieAuthFlow, PubkyGrantAuthFlow,
+    PubkySession, PublicKey,
+};
 use serde_json::json;
 use std::str;
 use std::sync::{Arc, Mutex};
@@ -79,7 +84,30 @@ pub fn switch_network(use_testnet: bool) -> Vec<String> {
 static TOKIO_RUNTIME: Lazy<Arc<Runtime>> =
     Lazy::new(|| Arc::new(Runtime::new().expect("Failed to create Tokio runtime")));
 
-static AUTH_FLOW: Lazy<Mutex<Option<PubkyAuthFlow>>> = Lazy::new(|| Mutex::new(None));
+static GRANT_AUTH_FLOW: Lazy<Mutex<Option<PubkyGrantAuthFlow>>> = Lazy::new(|| Mutex::new(None));
+#[allow(deprecated)]
+static COOKIE_AUTH_FLOW: Lazy<Mutex<Option<PubkyCookieAuthFlow>>> = Lazy::new(|| Mutex::new(None));
+
+fn parse_client_id(client_id: &str) -> Result<ClientId, String> {
+    ClientId::new(client_id).map_err(|error| format!("Invalid client_id: {}", error))
+}
+
+async fn export_grant_session_secret(session: &PubkySession) -> Result<String, String> {
+    session
+        .as_grant()
+        .ok_or_else(|| "Session is not grant-backed".to_string())?
+        .export_local_secret()
+        .await
+        .ok_or_else(|| "Session secret is unavailable for this session type".to_string())
+}
+
+fn export_cookie_session_secret(session: &PubkySession) -> Result<String, String> {
+    session
+        .as_cookie()
+        .ok_or_else(|| "Session is not cookie-backed".to_string())?
+        .export_secret()
+        .ok_or_else(|| "Session secret is unavailable for this session type".to_string())
+}
 
 // Define the EventListener trait
 #[uniffi::export(callback_interface)]
@@ -145,7 +173,7 @@ pub fn start_internal_event_loop() {
 }
 
 #[uniffi::export]
-pub fn delete_file(url: String, secret_key: String) -> Vec<String> {
+pub fn delete_file(url: String, secret_key: String, client_id: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let client = get_pubky_client();
@@ -155,7 +183,11 @@ pub fn delete_file(url: String, secret_key: String) -> Vec<String> {
         };
 
         let signer = client.signer(keypair);
-        let session = match signer.signin().await {
+        let client_id = match parse_client_id(&client_id) {
+            Ok(client_id) => client_id,
+            Err(error) => return create_response_vector(true, error),
+        };
+        let session = match signer.signin(client_id).await {
             Ok(session) => session,
             Err(error) => {
                 return create_response_vector(true, format!("Failed to sign in: {}", error))
@@ -263,8 +295,8 @@ pub fn publish_https(record_name: String, target: String, secret_key: String) ->
                 )
             }
         };
-        match client.client().pkarr().publish(&signed_packet, None).await {
-            Ok(()) => create_response_vector(false, keypair.public_key().z32()),
+        match client.client().pkarr().publish(&signed_packet).await {
+            Ok(_) => create_response_vector(false, keypair.public_key().z32()),
             Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
         }
     })
@@ -283,8 +315,13 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
 
         let client = get_pubky_client();
 
-        match client.client().pkarr().resolve(&public_key).await {
-            Some(signed_packet) => {
+        match client
+            .client()
+            .pkarr()
+            .resolve(&public_key, ResolvePolicy::CacheFirst)
+            .await
+        {
+            Ok(signed_packet) => {
                 // Extract HTTPS records from the signed packet
                 let https_records: Vec<serde_json::Value> = signed_packet
                     .all_resource_records()
@@ -299,8 +336,8 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
                                 "target": https.0.target.to_string(),
                             });
 
-                            // Access specific parameters via the typed SVCParam enum
-                            // (simple-dns 0.11 / pkarr 6). Port is key code 3, ALPN is 1.
+                            // Access specific parameters via the typed SVCParam enum.
+                            // Port is key code 3, ALPN is 1.
                             if let Some(SVCParam::Port(port)) = https.0.get_param(3) {
                                 https_json["port"] = serde_json::json!(port);
                             }
@@ -341,7 +378,7 @@ pub fn resolve_https(public_key: String) -> Vec<String> {
 
                 create_response_vector(false, json_str)
             }
-            None => create_response_vector(true, "No signed packet found".to_string()),
+            Err(e) => create_response_vector(true, format!("No signed packet found: {}", e)),
         }
     })
 }
@@ -391,6 +428,73 @@ pub fn sign_up(
     secret_key: String,
     homeserver: String,
     signup_token: Option<String>,
+    client_id: String,
+) -> Vec<String> {
+    sign_up_grant(secret_key, homeserver, signup_token, client_id)
+}
+
+#[uniffi::export]
+pub fn sign_up_grant(
+    secret_key: String,
+    homeserver: String,
+    signup_token: Option<String>,
+    client_id: String,
+) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+        let keypair = match get_keypair_from_secret_key(&secret_key) {
+            Ok(keypair) => keypair,
+            Err(error) => return create_response_vector(true, error),
+        };
+
+        let homeserver_public_key = match PublicKey::try_from(homeserver.as_str()) {
+            Ok(key) => key,
+            Err(error) => {
+                return create_response_vector(
+                    true,
+                    format!("Invalid homeserver public key: {}", error),
+                )
+            }
+        };
+
+        let signer = client.signer(keypair);
+        let client_id = match parse_client_id(&client_id) {
+            Ok(client_id) => client_id,
+            Err(error) => return create_response_vector(true, error),
+        };
+        match signer
+            .signup(&homeserver_public_key, signup_token.as_deref())
+            .await
+        {
+            Ok(()) => {
+                let session = match signer.signin(client_id).await {
+                    Ok(session) => session,
+                    Err(error) => {
+                        return create_response_vector(
+                            true,
+                            format!("signup succeeded but sign in failed: {}", error),
+                        )
+                    }
+                };
+                let grant_secret = match export_grant_session_secret(&session).await {
+                    Ok(secret) => secret,
+                    Err(error) => return create_response_vector(true, error),
+                };
+                let session_data = session_to_json_with_grant_secret(&session, &grant_secret);
+                create_response_vector(false, session_data)
+            }
+            Err(error) => create_response_vector(true, format!("signup failure: {}", error)),
+        }
+    })
+}
+
+#[uniffi::export]
+#[allow(deprecated)]
+pub fn sign_up_cookie(
+    secret_key: String,
+    homeserver: String,
+    signup_token: Option<String>,
 ) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
@@ -412,12 +516,15 @@ pub fn sign_up(
 
         let signer = client.signer(keypair);
         match signer
-            .signup(&homeserver_public_key, signup_token.as_deref())
+            .signup_cookie(&homeserver_public_key, signup_token.as_deref())
             .await
         {
             Ok(session) => {
-                let session_secret = session.export_secret();
-                let session_data = session_to_json_with_secret(&session, &session_secret);
+                let session_secret = match export_cookie_session_secret(&session) {
+                    Ok(secret) => secret,
+                    Err(error) => return create_response_vector(true, error),
+                };
+                let session_data = session_to_json_with_cookie_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
             }
             Err(error) => create_response_vector(true, format!("signup failure: {}", error)),
@@ -462,7 +569,12 @@ pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<Strin
 }
 
 #[uniffi::export]
-pub fn sign_in(secret_key: String) -> Vec<String> {
+pub fn sign_in(secret_key: String, client_id: String) -> Vec<String> {
+    sign_in_grant(secret_key, client_id)
+}
+
+#[uniffi::export]
+pub fn sign_in_grant(secret_key: String, client_id: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let client = get_pubky_client();
@@ -471,10 +583,42 @@ pub fn sign_in(secret_key: String) -> Vec<String> {
             Err(error) => return create_response_vector(true, error),
         };
         let signer = client.signer(keypair);
-        match signer.signin().await {
+        let client_id = match parse_client_id(&client_id) {
+            Ok(client_id) => client_id,
+            Err(error) => return create_response_vector(true, error),
+        };
+        match signer.signin(client_id).await {
             Ok(session) => {
-                let session_secret = session.export_secret();
-                let session_data = session_to_json_with_secret(&session, &session_secret);
+                let grant_secret = match export_grant_session_secret(&session).await {
+                    Ok(secret) => secret,
+                    Err(error) => return create_response_vector(true, error),
+                };
+                let session_data = session_to_json_with_grant_secret(&session, &grant_secret);
+                create_response_vector(false, session_data)
+            }
+            Err(error) => create_response_vector(true, format!("Failed to sign in: {}", error)),
+        }
+    })
+}
+
+#[uniffi::export]
+#[allow(deprecated)]
+pub fn sign_in_cookie(secret_key: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+        let keypair = match get_keypair_from_secret_key(&secret_key) {
+            Ok(keypair) => keypair,
+            Err(error) => return create_response_vector(true, error),
+        };
+        let signer = client.signer(keypair);
+        match signer.signin_cookie().await {
+            Ok(session) => {
+                let session_secret = match export_cookie_session_secret(&session) {
+                    Ok(secret) => secret,
+                    Err(error) => return create_response_vector(true, error),
+                };
+                let session_data = session_to_json_with_cookie_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
             }
             Err(error) => create_response_vector(true, format!("Failed to sign in: {}", error)),
@@ -487,12 +631,8 @@ pub fn sign_out(session_secret: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let pubky_client = get_pubky_client();
-        let http_client = pubky_client.client().clone();
 
-        // Import the session from the secret token
-        let session = match pubky::PubkySession::import_secret(&session_secret, Some(http_client))
-            .await
-        {
+        let session = match pubky_client.restore_session(&session_secret).await {
             Ok(session) => session,
             Err(error) => {
                 return create_response_vector(true, format!("Failed to import session: {}", error))
@@ -514,12 +654,7 @@ pub fn revalidate_session(session_secret: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let pubky_client = get_pubky_client();
-        let http_client = pubky_client.client().clone();
-
-        // Import the session from the secret token
-        let session = match pubky::PubkySession::import_secret(&session_secret, Some(http_client))
-            .await
-        {
+        let session = match pubky_client.restore_session(&session_secret).await {
             Ok(session) => session,
             Err(error) => {
                 return create_response_vector(true, format!("Failed to import session: {}", error))
@@ -529,10 +664,21 @@ pub fn revalidate_session(session_secret: String) -> Vec<String> {
         // Revalidate returns the session info if still valid, None if expired
         match session.revalidate().await {
             Ok(Some(_session_info)) => {
-                let session_secret = session.export_secret();
+                let grant_secret = match export_grant_session_secret(&session).await {
+                    Ok(secret) => secret,
+                    Err(_) => match export_cookie_session_secret(&session) {
+                        Ok(secret) => {
+                            return create_response_vector(
+                                false,
+                                session_to_json_with_cookie_secret(&session, &secret),
+                            )
+                        }
+                        Err(error) => return create_response_vector(true, error),
+                    },
+                };
                 create_response_vector(
                     false,
-                    session_to_json_with_secret(&session, &session_secret),
+                    session_to_json_with_grant_secret(&session, &grant_secret),
                 )
             }
             Ok(None) => create_response_vector(
@@ -550,7 +696,7 @@ pub fn revalidate_session(session_secret: String) -> Vec<String> {
 // To use put, you must first sign in to get a session, then use the session storage.
 // This function is kept for backward compatibility but requires a secret_key to authenticate.
 #[uniffi::export]
-pub fn put(url: String, content: String, secret_key: String) -> Vec<String> {
+pub fn put(url: String, content: String, secret_key: String, client_id: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     let content_bytes = content.into_bytes();
     runtime.block_on(async {
@@ -561,7 +707,11 @@ pub fn put(url: String, content: String, secret_key: String) -> Vec<String> {
         };
 
         let signer = client.signer(keypair);
-        let session = match signer.signin().await {
+        let client_id = match parse_client_id(&client_id) {
+            Ok(client_id) => client_id,
+            Err(error) => return create_response_vector(true, error),
+        };
+        let session = match signer.signin(client_id).await {
             Ok(session) => session,
             Err(error) => {
                 return create_response_vector(true, format!("Failed to sign in: {}", error))
@@ -632,8 +782,13 @@ pub fn resolve(public_key: String) -> Vec<String> {
         };
         let client = get_pubky_client();
 
-        match client.client().pkarr().resolve(&public_key).await {
-            Some(signed_packet) => {
+        match client
+            .client()
+            .pkarr()
+            .resolve(&public_key, ResolvePolicy::CacheFirst)
+            .await
+        {
+            Ok(signed_packet) => {
                 let all_records: Vec<_> = signed_packet.all_resource_records().collect();
                 // Convert each ResourceRecord to a JSON value
                 let json_records: Vec<serde_json::Value> = all_records
@@ -663,7 +818,7 @@ pub fn resolve(public_key: String) -> Vec<String> {
 
                 create_response_vector(false, json_str)
             }
-            None => create_response_vector(true, "No signed packet found".to_string()),
+            Err(e) => create_response_vector(true, format!("No signed packet found: {}", e)),
         }
     })
 }
@@ -708,12 +863,10 @@ pub fn publish(record_name: String, record_content: String, secret_key: String) 
         ));
 
         match SignedPacket::new(&keypair, &packet.answers, Timestamp::now()) {
-            Ok(signed_packet) => {
-                match client.client().pkarr().publish(&signed_packet, None).await {
-                    Ok(()) => create_response_vector(false, keypair.public_key().z32()),
-                    Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
-                }
-            }
+            Ok(signed_packet) => match client.client().pkarr().publish(&signed_packet).await {
+                Ok(_) => create_response_vector(false, keypair.public_key().z32()),
+                Err(e) => create_response_vector(true, format!("Failed to publish: {}", e)),
+            },
             Err(e) => {
                 create_response_vector(true, format!("Failed to create signed packet: {}", e))
             }
@@ -814,6 +967,18 @@ pub fn parse_auth_url(url: String) -> Vec<String> {
 }
 
 #[uniffi::export]
+pub fn parse_deep_link(url: String) -> Vec<String> {
+    let parsed_details = match parse_pubky_deep_link(&url) {
+        Ok(details) => details,
+        Err(error) => return create_response_vector(true, error),
+    };
+    match pubky_deep_link_details_to_json(&parsed_details) {
+        Ok(json) => create_response_vector(false, json),
+        Err(error) => create_response_vector(true, error),
+    }
+}
+
+#[uniffi::export]
 pub fn create_recovery_file(secret_key: String, passphrase: String) -> Vec<String> {
     if secret_key.is_empty() || passphrase.is_empty() {
         return create_response_vector(
@@ -870,9 +1035,12 @@ pub fn get_homeserver(pubky: String) -> Vec<String> {
         };
 
         match client.get_homeserver_of(&public_key).await {
-            Some(homeserver) => create_response_vector(false, homeserver.z32()),
-            None => {
+            Ok(Some(homeserver)) => create_response_vector(false, homeserver.z32()),
+            Ok(None) => {
                 create_response_vector(true, "No homeserver found for this public key".to_string())
+            }
+            Err(error) => {
+                create_response_vector(true, format!("Failed to get homeserver: {}", error))
             }
         }
     })
@@ -915,7 +1083,12 @@ pub fn validate_mnemonic_phrase(mnemonic_phrase: String) -> Vec<String> {
 }
 
 #[uniffi::export]
-pub fn start_auth_flow(capabilities_str: String) -> Vec<String> {
+pub fn start_auth_flow(capabilities_str: String, client_id: String) -> Vec<String> {
+    start_grant_auth_flow(capabilities_str, client_id)
+}
+
+#[uniffi::export]
+pub fn start_grant_auth_flow(capabilities_str: String, client_id: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let caps = match Capabilities::try_from(capabilities_str.as_str()) {
@@ -925,8 +1098,12 @@ pub fn start_auth_flow(capabilities_str: String) -> Vec<String> {
 
         let pubky_client = get_pubky_client();
         let http_client = pubky_client.client().clone();
+        let client_id = match parse_client_id(&client_id) {
+            Ok(client_id) => client_id,
+            Err(error) => return create_response_vector(true, error),
+        };
 
-        let flow = match PubkyAuthFlow::builder(&caps, AuthFlowKind::SignIn)
+        let flow = match PubkyGrantAuthFlow::builder(&caps, AuthFlowKind::signin(), client_id)
             .client(http_client)
             .start()
         {
@@ -938,7 +1115,7 @@ pub fn start_auth_flow(capabilities_str: String) -> Vec<String> {
 
         let auth_url = flow.authorization_url().to_string();
 
-        let mut guard = AUTH_FLOW.lock().unwrap();
+        let mut guard = GRANT_AUTH_FLOW.lock().unwrap();
         *guard = Some(flow);
 
         create_response_vector(false, auth_url)
@@ -947,10 +1124,15 @@ pub fn start_auth_flow(capabilities_str: String) -> Vec<String> {
 
 #[uniffi::export]
 pub fn await_auth_approval() -> Vec<String> {
+    await_grant_auth_approval()
+}
+
+#[uniffi::export]
+pub fn await_grant_auth_approval() -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let flow = {
-            let mut guard = AUTH_FLOW.lock().unwrap();
+            let mut guard = GRANT_AUTH_FLOW.lock().unwrap();
             guard.take()
         };
 
@@ -961,8 +1143,72 @@ pub fn await_auth_approval() -> Vec<String> {
 
         match flow.await_approval().await {
             Ok(session) => {
-                let session_secret = session.export_secret();
-                let session_data = session_to_json_with_secret(&session, &session_secret);
+                let grant_secret = match export_grant_session_secret(&session).await {
+                    Ok(secret) => secret,
+                    Err(error) => return create_response_vector(true, error),
+                };
+                let session_data = session_to_json_with_grant_secret(&session, &grant_secret);
+                create_response_vector(false, session_data)
+            }
+            Err(e) => create_response_vector(true, format!("Auth approval failed: {}", e)),
+        }
+    })
+}
+
+#[uniffi::export]
+#[allow(deprecated)]
+pub fn start_cookie_auth_flow(capabilities_str: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let caps = match Capabilities::try_from(capabilities_str.as_str()) {
+            Ok(caps) => caps,
+            Err(e) => return create_response_vector(true, format!("Invalid capabilities: {}", e)),
+        };
+
+        let pubky_client = get_pubky_client();
+        let http_client = pubky_client.client().clone();
+
+        let flow = match PubkyCookieAuthFlow::builder(&caps, AuthFlowKind::signin())
+            .client(http_client)
+            .start()
+        {
+            Ok(flow) => flow,
+            Err(e) => {
+                return create_response_vector(true, format!("Failed to start auth flow: {}", e))
+            }
+        };
+
+        let auth_url = flow.authorization_url().to_string();
+
+        let mut guard = COOKIE_AUTH_FLOW.lock().unwrap();
+        *guard = Some(flow);
+
+        create_response_vector(false, auth_url)
+    })
+}
+
+#[uniffi::export]
+#[allow(deprecated)]
+pub fn await_cookie_auth_approval() -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let flow = {
+            let mut guard = COOKIE_AUTH_FLOW.lock().unwrap();
+            guard.take()
+        };
+
+        let flow = match flow {
+            Some(f) => f,
+            None => return create_response_vector(true, "No auth flow in progress".to_string()),
+        };
+
+        match flow.await_approval().await {
+            Ok(session) => {
+                let session_secret = match export_cookie_session_secret(&session) {
+                    Ok(secret) => secret,
+                    Err(error) => return create_response_vector(true, error),
+                };
+                let session_data = session_to_json_with_cookie_secret(&session, &session_secret);
                 create_response_vector(false, session_data)
             }
             Err(e) => create_response_vector(true, format!("Auth approval failed: {}", e)),
@@ -976,9 +1222,7 @@ pub fn put_with_session(url: String, content: String, session_secret: String) ->
     let content_bytes = content.into_bytes();
     runtime.block_on(async {
         let pubky_client = get_pubky_client();
-        let http_client = pubky_client.client().clone();
-
-        let session = match PubkySession::import_secret(&session_secret, Some(http_client)).await {
+        let session = match pubky_client.restore_session(&session_secret).await {
             Ok(s) => s,
             Err(e) => {
                 return create_response_vector(true, format!("Failed to import session: {}", e))
@@ -1004,9 +1248,7 @@ pub fn delete_with_session(url: String, session_secret: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
         let pubky_client = get_pubky_client();
-        let http_client = pubky_client.client().clone();
-
-        let session = match PubkySession::import_secret(&session_secret, Some(http_client)).await {
+        let session = match pubky_client.restore_session(&session_secret).await {
             Ok(s) => s,
             Err(e) => {
                 return create_response_vector(true, format!("Failed to import session: {}", e))
