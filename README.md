@@ -54,6 +54,20 @@ coordinating a migration across those apps.
 ./build.sh android
 ```
 
+The Android build is pinned to the NDK version in `.ndk-version` (currently
+r29) and requires NDK r28 or newer. Install the pinned version with
+`sdkmanager "ndk;$(cat .ndk-version)"`. NDK r28+ emits ELF `LOAD` segments
+compatible with Android's 16 KB page size by default. After building all four
+shipped ABIs, the build runs `scripts/verify_android_page_size.sh` and fails if
+any 64-bit shared library has a `LOAD` alignment below `0x4000`.
+
+To verify already-built Android bindings without rebuilding them:
+
+```
+ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/$(cat .ndk-version)" \
+  ./scripts/verify_android_page_size.sh
+```
+
 ### To build only Python bindings:
 ```
 ./build.sh python

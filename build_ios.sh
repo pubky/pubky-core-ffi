@@ -22,7 +22,7 @@ cargo build
 
 # Modify Cargo.toml
 echo "Updating Cargo.toml..."
-sed -i '' 's/crate_type = .*/crate_type = ["cdylib", "staticlib"]/' Cargo.toml
+sed -i '' 's/crate[-_]type = .*/crate-type = ["cdylib", "staticlib"]/' Cargo.toml
 
 # Build release
 echo "Building release version..."
