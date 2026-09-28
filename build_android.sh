@@ -1,49 +1,76 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e  # Exit immediately if a command exits with a non-zero status.
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+readonly BASE_DIR="./bindings/android"
+readonly JNILIBS_DIR="$BASE_DIR/jniLibs"
+readonly NDK_VERSION_FILE="$SCRIPT_DIR/.ndk-version"
+readonly CARGO_NDK_VERSION="3.5.4"
 
 echo "Starting Android build process..."
 
-# Define output directories
-BASE_DIR="./bindings/android"
-JNILIBS_DIR="$BASE_DIR/jniLibs"
-
-# Create output directories
-mkdir -p "$BASE_DIR"
-mkdir -p "$JNILIBS_DIR"
-
-# Remove previous build
-echo "Removing previous build..."
-rm -rf bindings/android/
-
-# Cargo Build
-echo "Building Rust libraries..."
-cargo build
-
-# Modify Cargo.toml
-echo "Updating Cargo.toml..."
-sed -i '' 's/crate_type = .*/crate_type = ["cdylib"]/' Cargo.toml
-
-# Build release
-echo "Building release version..."
-cargo build --release
-
-# Install cargo-ndk if not already installed
-if ! command -v cargo-ndk &> /dev/null; then
-    echo "Installing cargo-ndk..."
-    cargo install cargo-ndk
+if [[ -z "${ANDROID_SDK_ROOT:-}" ]]; then
+    if [[ -n "${ANDROID_HOME:-}" ]]; then
+        export ANDROID_SDK_ROOT="$ANDROID_HOME"
+    else
+        echo "Error: ANDROID_SDK_ROOT or ANDROID_HOME must point to the Android SDK." >&2
+        exit 1
+    fi
 fi
 
-# Add Android targets
-echo "Adding Android targets..."
+if [[ ! -f "$NDK_VERSION_FILE" ]]; then
+    echo "Error: pinned NDK version file not found: $NDK_VERSION_FILE" >&2
+    exit 1
+fi
+
+ANDROID_NDK_VERSION="${ANDROID_NDK_VERSION:-$(tr -d '[:space:]' < "$NDK_VERSION_FILE")}"
+readonly ANDROID_NDK_VERSION
+readonly NDK_MAJOR_VERSION="${ANDROID_NDK_VERSION%%.*}"
+
+if [[ ! "$NDK_MAJOR_VERSION" =~ ^[0-9]+$ ]] || (( NDK_MAJOR_VERSION < 28 )); then
+    echo "Error: Android NDK r28 or newer is required for 16 KB ELF alignment; got '$ANDROID_NDK_VERSION'." >&2
+    exit 1
+fi
+
+readonly PINNED_NDK="$ANDROID_SDK_ROOT/ndk/$ANDROID_NDK_VERSION"
+if [[ ! -d "$PINNED_NDK" ]]; then
+    echo "Error: Android NDK $ANDROID_NDK_VERSION is not installed at $PINNED_NDK." >&2
+    echo "Install it with: sdkmanager \"ndk;$ANDROID_NDK_VERSION\"" >&2
+    exit 1
+fi
+
+# cargo-ndk honors these variables. Setting both prevents a developer's older
+# default NDK (notably r27 and below) from producing 4 KB-aligned binaries.
+export ANDROID_NDK_HOME="$PINNED_NDK"
+export NDK_HOME="$PINNED_NDK"
+
+if ! cargo ndk --version 2>/dev/null | grep -Fq "cargo-ndk $CARGO_NDK_VERSION"; then
+    echo "Installing cargo-ndk $CARGO_NDK_VERSION..."
+    cargo install cargo-ndk --version "$CARGO_NDK_VERSION" --locked
+fi
+
+echo "Using Android NDK $ANDROID_NDK_VERSION at $ANDROID_NDK_HOME"
+
+echo "Removing previous Android bindings..."
+rm -rf "$BASE_DIR"
+mkdir -p "$JNILIBS_DIR"
+
+echo "Building host library for UniFFI binding generation..."
+cargo build --release
+
+echo "Adding Android Rust targets..."
 rustup target add \
     aarch64-linux-android \
     armv7-linux-androideabi \
     i686-linux-android \
     x86_64-linux-android
 
-# Build for all Android architectures
-echo "Building for Android architectures..."
+echo "Building Rust libraries for all shipped Android ABIs..."
+# Keep a content-derived GNU build ID for native crash symbol matching.
+RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }-C link-arg=-Wl,--build-id=sha1" \
 cargo ndk \
     -o "$JNILIBS_DIR" \
     --manifest-path ./Cargo.toml \
@@ -53,42 +80,38 @@ cargo ndk \
     -t x86_64 \
     build --release
 
-# Generate Kotlin bindings
-echo "Generating Kotlin bindings..."
-LIBRARY_PATH="./target/release/libpubkycore.dylib"
+echo "Verifying 16 KB ELF LOAD alignment..."
+./scripts/verify_android_page_size.sh "$JNILIBS_DIR"
 
-# Check if the library file exists
-if [ ! -f "$LIBRARY_PATH" ]; then
-    echo "Error: Library file not found at $LIBRARY_PATH"
-    echo "Available files in target/release:"
-    ls -l ./target/release/
+case "$(uname -s)" in
+    Darwin) HOST_LIBRARY="./target/release/libpubkycore.dylib" ;;
+    Linux) HOST_LIBRARY="./target/release/libpubkycore.so" ;;
+    *)
+        echo "Error: unsupported host for UniFFI binding generation: $(uname -s)" >&2
+        exit 1
+        ;;
+esac
+
+if [[ ! -f "$HOST_LIBRARY" ]]; then
+    echo "Error: host library not found at $HOST_LIBRARY" >&2
     exit 1
 fi
 
-# Create a temporary directory for initial generation
-TMP_DIR=$(mktemp -d)
+echo "Generating Kotlin bindings..."
+readonly TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
 
-# Generate the bindings to temp directory first
-cargo run --bin uniffi-bindgen generate \
-    --library "$LIBRARY_PATH" \
+cargo run --release --bin uniffi-bindgen generate \
+    --library "$HOST_LIBRARY" \
     --language kotlin \
     --out-dir "$TMP_DIR"
 
-# Move the Kotlin file from the nested directory to the final location
-echo "Moving Kotlin file to final location..."
-find "$TMP_DIR" -name "pubkycore.kt" -exec mv {} "$BASE_DIR/" \;
-
-# Clean up temp directory and any remaining uniffi directories
-echo "Cleaning up temporary files..."
-rm -rf "$TMP_DIR"
-rm -rf "$BASE_DIR/uniffi"
-
-# Verify the file was moved correctly
-if [ ! -f "$BASE_DIR/pubkycore.kt" ]; then
-    echo "Error: Kotlin bindings were not moved correctly"
-    echo "Contents of $BASE_DIR:"
-    ls -la "$BASE_DIR"
+readonly GENERATED_KOTLIN="$(find "$TMP_DIR" -name pubkycore.kt -type f -print -quit)"
+if [[ -z "$GENERATED_KOTLIN" ]]; then
+    echo "Error: UniFFI did not generate pubkycore.kt." >&2
     exit 1
 fi
+
+mv "$GENERATED_KOTLIN" "$BASE_DIR/pubkycore.kt"
 
 echo "Android build process completed successfully!"
