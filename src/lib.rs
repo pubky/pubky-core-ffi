@@ -98,13 +98,13 @@ impl NetworkClient {
         }
         if let Some(max) = config.pool_max_idle_per_host {
             let max = usize::try_from(max).map_err(|_| PubkyCoreError::Validation {
-                message: "pool_max_idle_per_host exceeds the platform limit".to_string(),
+                details: "pool_max_idle_per_host exceeds the platform limit".to_string(),
             })?;
             builder.pool_max_idle_per_host(max);
         }
         if let Some(limit) = config.max_error_body_bytes {
             let limit = usize::try_from(limit).map_err(|_| PubkyCoreError::Validation {
-                message: "max_error_body_bytes exceeds the platform limit".to_string(),
+                details: "max_error_body_bytes exceeds the platform limit".to_string(),
             })?;
             builder.max_error_body_bytes(limit);
         }

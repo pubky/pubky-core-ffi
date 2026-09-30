@@ -17,7 +17,7 @@ pub(crate) fn session_path(session: &PubkySession, input: &str) -> Result<String
     let resource = input.parse::<PubkyResource>()?;
     if resource.owner != session.public_key() {
         return Err(PubkyCoreError::Validation {
-            message: "addressed resource belongs to a different Pubky".to_string(),
+            details: "addressed resource belongs to a different Pubky".to_string(),
         });
     }
     Ok(resource.path.as_str().to_string())

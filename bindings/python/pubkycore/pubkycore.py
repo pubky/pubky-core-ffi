@@ -2267,89 +2267,89 @@ _UniffiTempPubkyCoreError = PubkyCoreError
 
 class PubkyCoreError:  # type: ignore
     class Transport(_UniffiTempPubkyCoreError):
-        def __init__(self, message):
+        def __init__(self, details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
             ]))
-            self.message = message
+            self.details = details
         def __repr__(self):
             return "PubkyCoreError.Transport({})".format(str(self))
     _UniffiTempPubkyCoreError.Transport = Transport # type: ignore
     class Server(_UniffiTempPubkyCoreError):
-        def __init__(self, status, message):
+        def __init__(self, status, details):
             super().__init__(", ".join([
                 "status={!r}".format(status),
-                "message={!r}".format(message),
+                "details={!r}".format(details),
             ]))
             self.status = status
-            self.message = message
+            self.details = details
         def __repr__(self):
             return "PubkyCoreError.Server({})".format(str(self))
     _UniffiTempPubkyCoreError.Server = Server # type: ignore
     class Validation(_UniffiTempPubkyCoreError):
-        def __init__(self, message):
+        def __init__(self, details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
             ]))
-            self.message = message
+            self.details = details
         def __repr__(self):
             return "PubkyCoreError.Validation({})".format(str(self))
     _UniffiTempPubkyCoreError.Validation = Validation # type: ignore
     class DecodeJson(_UniffiTempPubkyCoreError):
-        def __init__(self, message):
+        def __init__(self, details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
             ]))
-            self.message = message
+            self.details = details
         def __repr__(self):
             return "PubkyCoreError.DecodeJson({})".format(str(self))
     _UniffiTempPubkyCoreError.DecodeJson = DecodeJson # type: ignore
     class Pkarr(_UniffiTempPubkyCoreError):
-        def __init__(self, message, retryable):
+        def __init__(self, details, retryable):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
                 "retryable={!r}".format(retryable),
             ]))
-            self.message = message
+            self.details = details
             self.retryable = retryable
         def __repr__(self):
             return "PubkyCoreError.Pkarr({})".format(str(self))
     _UniffiTempPubkyCoreError.Pkarr = Pkarr # type: ignore
     class Parse(_UniffiTempPubkyCoreError):
-        def __init__(self, message):
+        def __init__(self, details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
             ]))
-            self.message = message
+            self.details = details
         def __repr__(self):
             return "PubkyCoreError.Parse({})".format(str(self))
     _UniffiTempPubkyCoreError.Parse = Parse # type: ignore
     class Authentication(_UniffiTempPubkyCoreError):
-        def __init__(self, message, expired):
+        def __init__(self, details, expired):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
                 "expired={!r}".format(expired),
             ]))
-            self.message = message
+            self.details = details
             self.expired = expired
         def __repr__(self):
             return "PubkyCoreError.Authentication({})".format(str(self))
     _UniffiTempPubkyCoreError.Authentication = Authentication # type: ignore
     class Build(_UniffiTempPubkyCoreError):
-        def __init__(self, message):
+        def __init__(self, details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
             ]))
-            self.message = message
+            self.details = details
         def __repr__(self):
             return "PubkyCoreError.Build({})".format(str(self))
     _UniffiTempPubkyCoreError.Build = Build # type: ignore
     class State(_UniffiTempPubkyCoreError):
-        def __init__(self, message):
+        def __init__(self, details):
             super().__init__(", ".join([
-                "message={!r}".format(message),
+                "details={!r}".format(details),
             ]))
-            self.message = message
+            self.details = details
         def __repr__(self):
             return "PubkyCoreError.State({})".format(str(self))
     _UniffiTempPubkyCoreError.State = State # type: ignore
@@ -2364,42 +2364,42 @@ class _UniffiConverterTypePubkyCoreError(_UniffiConverterRustBuffer):
         variant = buf.read_i32()
         if variant == 1:
             return PubkyCoreError.Transport(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
             )
         if variant == 2:
             return PubkyCoreError.Server(
                 status=_UniffiConverterUInt16.read(buf),
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
             )
         if variant == 3:
             return PubkyCoreError.Validation(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
             )
         if variant == 4:
             return PubkyCoreError.DecodeJson(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
             )
         if variant == 5:
             return PubkyCoreError.Pkarr(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
                 retryable=_UniffiConverterBool.read(buf),
             )
         if variant == 6:
             return PubkyCoreError.Parse(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
             )
         if variant == 7:
             return PubkyCoreError.Authentication(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
                 expired=_UniffiConverterBool.read(buf),
             )
         if variant == 8:
             return PubkyCoreError.Build(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
             )
         if variant == 9:
             return PubkyCoreError.State(
-                message=_UniffiConverterString.read(buf),
+                details=_UniffiConverterString.read(buf),
             )
         raise InternalError("Raw enum value doesn't match any cases")
 
@@ -2407,34 +2407,34 @@ class _UniffiConverterTypePubkyCoreError(_UniffiConverterRustBuffer):
     def write(value, buf):
         if isinstance(value, PubkyCoreError.Transport):
             buf.write_i32(1)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
         if isinstance(value, PubkyCoreError.Server):
             buf.write_i32(2)
             _UniffiConverterUInt16.write(value.status, buf)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
         if isinstance(value, PubkyCoreError.Validation):
             buf.write_i32(3)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
         if isinstance(value, PubkyCoreError.DecodeJson):
             buf.write_i32(4)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
         if isinstance(value, PubkyCoreError.Pkarr):
             buf.write_i32(5)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
             _UniffiConverterBool.write(value.retryable, buf)
         if isinstance(value, PubkyCoreError.Parse):
             buf.write_i32(6)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
         if isinstance(value, PubkyCoreError.Authentication):
             buf.write_i32(7)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
             _UniffiConverterBool.write(value.expired, buf)
         if isinstance(value, PubkyCoreError.Build):
             buf.write_i32(8)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
         if isinstance(value, PubkyCoreError.State):
             buf.write_i32(9)
-            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterString.write(value.details, buf)
 
 
 

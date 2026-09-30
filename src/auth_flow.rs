@@ -12,13 +12,13 @@ use url::Url;
 
 fn bytes_32(bytes: Vec<u8>, name: &str) -> Result<[u8; 32], PubkyCoreError> {
     bytes.try_into().map_err(|_| PubkyCoreError::Validation {
-        message: format!("{name} must contain exactly 32 bytes"),
+        details: format!("{name} must contain exactly 32 bytes"),
     })
 }
 
 fn state_record(flow: &PubkyGrantAuthFlow) -> Result<GrantAuthFlowStateRecord, PubkyCoreError> {
     let state = flow.save_local().ok_or_else(|| PubkyCoreError::State {
-        message: "Grant flow does not use an exportable local signer".to_string(),
+        details: "Grant flow does not use an exportable local signer".to_string(),
     })?;
     Ok(GrantAuthFlowStateRecord {
         authorization_url: state.authorization_url,
@@ -29,10 +29,10 @@ fn state_record(flow: &PubkyGrantAuthFlow) -> Result<GrantAuthFlowStateRecord, P
 async fn session_json(session: &pubky::PubkySession) -> Result<String, PubkyCoreError> {
     let secret = export_grant_session_secret(session)
         .await
-        .map_err(|message| PubkyCoreError::State { message })?;
+        .map_err(|details| PubkyCoreError::State { details })?;
     session_to_json_with_grant_secret(session, &secret)
         .await
-        .map_err(|message| PubkyCoreError::State { message })
+        .map_err(|details| PubkyCoreError::State { details })
 }
 
 #[uniffi::export]
@@ -41,15 +41,15 @@ pub fn start_grant_auth_flow_with_config(
 ) -> Result<GrantAuthFlowStateRecord, PubkyCoreError> {
     let caps = Capabilities::try_from(config.capabilities.as_str()).map_err(|error| {
         PubkyCoreError::Validation {
-            message: format!("invalid capabilities: {error}"),
+            details: format!("invalid capabilities: {error}"),
         }
     })?;
     let client_id = parse_client_id(&config.client_id)
-        .map_err(|message| PubkyCoreError::Validation { message })?;
+        .map_err(|details| PubkyCoreError::Validation { details })?;
     let auth_kind = match config.homeserver.as_deref() {
         Some(homeserver) => AuthFlowKind::signup(
             PublicKey::try_from(homeserver).map_err(|error| PubkyCoreError::Validation {
-                message: format!("invalid homeserver public key: {error}"),
+                details: format!("invalid homeserver public key: {error}"),
             })?,
             config.signup_token,
         ),
@@ -61,7 +61,7 @@ pub fn start_grant_auth_flow_with_config(
         .map(Url::parse)
         .transpose()
         .map_err(|error| PubkyCoreError::Parse {
-            message: error.to_string(),
+            details: error.to_string(),
         })?;
     let client_secret = config
         .client_secret
@@ -102,7 +102,7 @@ pub fn start_grant_auth_flow_with_config(
 pub fn save_grant_auth_flow() -> Result<GrantAuthFlowStateRecord, PubkyCoreError> {
     let guard = GRANT_AUTH_FLOW.lock().unwrap();
     let flow = guard.as_ref().ok_or_else(|| PubkyCoreError::State {
-        message: "No Grant auth flow is in progress".to_string(),
+        details: "No Grant auth flow is in progress".to_string(),
     })?;
     state_record(flow)
 }
@@ -128,7 +128,7 @@ pub fn poll_grant_auth_flow() -> Result<Option<String>, PubkyCoreError> {
             .unwrap()
             .take()
             .ok_or_else(|| PubkyCoreError::State {
-                message: "No Grant auth flow is in progress".to_string(),
+                details: "No Grant auth flow is in progress".to_string(),
             })?;
 
         match flow.try_poll_once().await {
@@ -156,7 +156,7 @@ pub fn await_grant_auth_flow() -> Result<String, PubkyCoreError> {
             .unwrap()
             .take()
             .ok_or_else(|| PubkyCoreError::State {
-                message: "No Grant auth flow is in progress".to_string(),
+                details: "No Grant auth flow is in progress".to_string(),
             })?;
         let session = flow.await_approval().await?;
         session_json(&session).await
@@ -175,9 +175,9 @@ pub fn sign_in_grant_blocking(
 ) -> Result<String, PubkyCoreError> {
     TOKIO_RUNTIME.block_on(async {
         let keypair = get_keypair_from_secret_key(&secret_key)
-            .map_err(|message| PubkyCoreError::Validation { message })?;
+            .map_err(|details| PubkyCoreError::Validation { details })?;
         let client_id = parse_client_id(&client_id)
-            .map_err(|message| PubkyCoreError::Validation { message })?;
+            .map_err(|details| PubkyCoreError::Validation { details })?;
         let session = crate::get_pubky_client()
             .signer(keypair)
             .signin_blocking(client_id)
@@ -191,13 +191,13 @@ pub fn sign_in_grant_blocking(
 pub fn sign_in_cookie_blocking(secret_key: String) -> Result<String, PubkyCoreError> {
     TOKIO_RUNTIME.block_on(async {
         let keypair = get_keypair_from_secret_key(&secret_key)
-            .map_err(|message| PubkyCoreError::Validation { message })?;
+            .map_err(|details| PubkyCoreError::Validation { details })?;
         let session = crate::get_pubky_client()
             .signer(keypair)
             .signin_cookie_blocking()
             .await?;
         let secret = export_cookie_session_secret(&session)
-            .map_err(|message| PubkyCoreError::State { message })?;
+            .map_err(|details| PubkyCoreError::State { details })?;
         Ok(session_to_json_with_cookie_secret(&session, &secret))
     })
 }

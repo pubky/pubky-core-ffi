@@ -1928,69 +1928,69 @@ sealed class PubkyCoreException: Exception() {
     // Each variant is a nested class
 
     class Transport(
-        val `message`: String
+        val `details`: String
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "details=${ `details` }"
     }
 
     class Server(
         val `status`: UShort,
-        val `message`: String
+        val `details`: String
         ) : PubkyCoreException() {
         override val message
-            get() = "status=${ `status` }, message=${ `message` }"
+            get() = "status=${ `status` }, details=${ `details` }"
     }
 
     class Validation(
-        val `message`: String
+        val `details`: String
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "details=${ `details` }"
     }
 
     class DecodeJson(
-        val `message`: String
+        val `details`: String
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "details=${ `details` }"
     }
 
     class Pkarr(
-        val `message`: String,
+        val `details`: String,
         val `retryable`: Boolean
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }, retryable=${ `retryable` }"
+            get() = "details=${ `details` }, retryable=${ `retryable` }"
     }
 
     class Parse(
-        val `message`: String
+        val `details`: String
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "details=${ `details` }"
     }
 
     class Authentication(
-        val `message`: String,
+        val `details`: String,
         val `expired`: Boolean
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }, expired=${ `expired` }"
+            get() = "details=${ `details` }, expired=${ `expired` }"
     }
 
     class Build(
-        val `message`: String
+        val `details`: String
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "details=${ `details` }"
     }
 
     class State(
-        val `message`: String
+        val `details`: String
         ) : PubkyCoreException() {
         override val message
-            get() = "message=${ `message` }"
+            get() = "details=${ `details` }"
     }
 
 
@@ -2045,50 +2045,50 @@ public object FfiConverterTypePubkyCoreError : FfiConverterRustBuffer<PubkyCoreE
             is PubkyCoreException.Transport -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
             )
             is PubkyCoreException.Server -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 + FfiConverterUShort.allocationSize(value.`status`)
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
             )
             is PubkyCoreException.Validation -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
             )
             is PubkyCoreException.DecodeJson -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
             )
             is PubkyCoreException.Pkarr -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
                 + FfiConverterBoolean.allocationSize(value.`retryable`)
             )
             is PubkyCoreException.Parse -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
             )
             is PubkyCoreException.Authentication -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
                 + FfiConverterBoolean.allocationSize(value.`expired`)
             )
             is PubkyCoreException.Build -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
             )
             is PubkyCoreException.State -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
-                + FfiConverterString.allocationSize(value.`message`)
+                + FfiConverterString.allocationSize(value.`details`)
             )
         }
     }
@@ -2097,50 +2097,50 @@ public object FfiConverterTypePubkyCoreError : FfiConverterRustBuffer<PubkyCoreE
         when(value) {
             is PubkyCoreException.Transport -> {
                 buf.putInt(1)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 Unit
             }
             is PubkyCoreException.Server -> {
                 buf.putInt(2)
                 FfiConverterUShort.write(value.`status`, buf)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 Unit
             }
             is PubkyCoreException.Validation -> {
                 buf.putInt(3)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 Unit
             }
             is PubkyCoreException.DecodeJson -> {
                 buf.putInt(4)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 Unit
             }
             is PubkyCoreException.Pkarr -> {
                 buf.putInt(5)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 FfiConverterBoolean.write(value.`retryable`, buf)
                 Unit
             }
             is PubkyCoreException.Parse -> {
                 buf.putInt(6)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 Unit
             }
             is PubkyCoreException.Authentication -> {
                 buf.putInt(7)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 FfiConverterBoolean.write(value.`expired`, buf)
                 Unit
             }
             is PubkyCoreException.Build -> {
                 buf.putInt(8)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 Unit
             }
             is PubkyCoreException.State -> {
                 buf.putInt(9)
-                FfiConverterString.write(value.`message`, buf)
+                FfiConverterString.write(value.`details`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }

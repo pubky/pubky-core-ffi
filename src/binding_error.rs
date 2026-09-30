@@ -7,32 +7,32 @@ use pubky::errors::{AuthError, BuildError, PkarrError, RequestError};
 /// can branch on an error category and, for server errors, the HTTP status.
 #[derive(Debug, thiserror::Error, uniffi::Error)]
 pub enum PubkyCoreError {
-    #[error("HTTP transport error: {message}")]
-    Transport { message: String },
+    #[error("HTTP transport error: {details}")]
+    Transport { details: String },
 
-    #[error("Server responded with {status}: {message}")]
-    Server { status: u16, message: String },
+    #[error("Server responded with {status}: {details}")]
+    Server { status: u16, details: String },
 
-    #[error("Invalid request: {message}")]
-    Validation { message: String },
+    #[error("Invalid request: {details}")]
+    Validation { details: String },
 
-    #[error("Failed to decode response JSON: {message}")]
-    DecodeJson { message: String },
+    #[error("Failed to decode response JSON: {details}")]
+    DecodeJson { details: String },
 
-    #[error("PKARR operation failed: {message}")]
-    Pkarr { message: String, retryable: bool },
+    #[error("PKARR operation failed: {details}")]
+    Pkarr { details: String, retryable: bool },
 
-    #[error("Failed to parse URL: {message}")]
-    Parse { message: String },
+    #[error("Failed to parse URL: {details}")]
+    Parse { details: String },
 
-    #[error("Authentication failed: {message}")]
-    Authentication { message: String, expired: bool },
+    #[error("Authentication failed: {details}")]
+    Authentication { details: String, expired: bool },
 
-    #[error("Client construction failed: {message}")]
-    Build { message: String },
+    #[error("Client construction failed: {details}")]
+    Build { details: String },
 
-    #[error("Binding state error: {message}")]
-    State { message: String },
+    #[error("Binding state error: {details}")]
+    State { details: String },
 }
 
 impl From<pubky::Error> for PubkyCoreError {
@@ -41,7 +41,7 @@ impl From<pubky::Error> for PubkyCoreError {
             pubky::Error::Request(error) => error.into(),
             pubky::Error::Pkarr(error) => error.into(),
             pubky::Error::Parse(error) => Self::Parse {
-                message: error.to_string(),
+                details: error.to_string(),
             },
             pubky::Error::Authentication(error) => error.into(),
             pubky::Error::Build(error) => error.into(),
@@ -53,14 +53,14 @@ impl From<RequestError> for PubkyCoreError {
     fn from(error: RequestError) -> Self {
         match error {
             RequestError::Transport(error) => Self::Transport {
-                message: error.to_string(),
+                details: error.to_string(),
             },
             RequestError::Server { status, message } => Self::Server {
                 status: status.as_u16(),
-                message,
+                details: message,
             },
-            RequestError::Validation { message } => Self::Validation { message },
-            RequestError::DecodeJson { message } => Self::DecodeJson { message },
+            RequestError::Validation { message } => Self::Validation { details: message },
+            RequestError::DecodeJson { message } => Self::DecodeJson { details: message },
         }
     }
 }
@@ -69,7 +69,7 @@ impl From<PkarrError> for PubkyCoreError {
     fn from(error: PkarrError) -> Self {
         let retryable = error.is_retryable();
         Self::Pkarr {
-            message: error.to_string(),
+            details: error.to_string(),
             retryable,
         }
     }
@@ -79,7 +79,7 @@ impl From<AuthError> for PubkyCoreError {
     fn from(error: AuthError) -> Self {
         let expired = matches!(error, AuthError::RequestExpired);
         Self::Authentication {
-            message: error.to_string(),
+            details: error.to_string(),
             expired,
         }
     }
@@ -88,7 +88,7 @@ impl From<AuthError> for PubkyCoreError {
 impl From<BuildError> for PubkyCoreError {
     fn from(error: BuildError) -> Self {
         Self::Build {
-            message: error.to_string(),
+            details: error.to_string(),
         }
     }
 }
@@ -96,7 +96,7 @@ impl From<BuildError> for PubkyCoreError {
 impl From<reqwest::Error> for PubkyCoreError {
     fn from(error: reqwest::Error) -> Self {
         Self::Transport {
-            message: error.to_string(),
+            details: error.to_string(),
         }
     }
 }
@@ -104,7 +104,7 @@ impl From<reqwest::Error> for PubkyCoreError {
 impl From<serde_json::Error> for PubkyCoreError {
     fn from(error: serde_json::Error) -> Self {
         Self::DecodeJson {
-            message: error.to_string(),
+            details: error.to_string(),
         }
     }
 }
@@ -122,9 +122,9 @@ mod tests {
         });
 
         match error {
-            PubkyCoreError::Server { status, message } => {
+            PubkyCoreError::Server { status, details } => {
                 assert_eq!(status, 403);
-                assert_eq!(message, "missing capability");
+                assert_eq!(details, "missing capability");
             }
             other => panic!("unexpected error: {other:?}"),
         }

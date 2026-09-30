@@ -1280,15 +1280,15 @@ public func FfiConverterTypeStorageResourceStats_lower(_ value: StorageResourceS
 }
 
 public enum PubkyCoreError {
-    case Transport(message: String)
-    case Server(status: UInt16, message: String)
-    case Validation(message: String)
-    case DecodeJson(message: String)
-    case Pkarr(message: String, retryable: Bool)
-    case Parse(message: String)
-    case Authentication(message: String, expired: Bool)
-    case Build(message: String)
-    case State(message: String)
+    case Transport(details: String)
+    case Server(status: UInt16, details: String)
+    case Validation(details: String)
+    case DecodeJson(details: String)
+    case Pkarr(details: String, retryable: Bool)
+    case Parse(details: String)
+    case Authentication(details: String, expired: Bool)
+    case Build(details: String)
+    case State(details: String)
 
     fileprivate static func uniffiErrorHandler(_ error: RustBuffer) throws -> Error {
         return try FfiConverterTypePubkyCoreError.lift(error)
@@ -1302,34 +1302,34 @@ public struct FfiConverterTypePubkyCoreError: FfiConverterRustBuffer {
         let variant: Int32 = try readInt(&buf)
         switch variant {
         case 1: return try .Transport(
-                message: FfiConverterString.read(from: &buf)
+                details: FfiConverterString.read(from: &buf)
             )
         case 2: return try .Server(
                 status: FfiConverterUInt16.read(from: &buf),
-                message: FfiConverterString.read(from: &buf)
+                details: FfiConverterString.read(from: &buf)
             )
         case 3: return try .Validation(
-                message: FfiConverterString.read(from: &buf)
+                details: FfiConverterString.read(from: &buf)
             )
         case 4: return try .DecodeJson(
-                message: FfiConverterString.read(from: &buf)
+                details: FfiConverterString.read(from: &buf)
             )
         case 5: return try .Pkarr(
-                message: FfiConverterString.read(from: &buf),
+                details: FfiConverterString.read(from: &buf),
                 retryable: FfiConverterBool.read(from: &buf)
             )
         case 6: return try .Parse(
-                message: FfiConverterString.read(from: &buf)
+                details: FfiConverterString.read(from: &buf)
             )
         case 7: return try .Authentication(
-                message: FfiConverterString.read(from: &buf),
+                details: FfiConverterString.read(from: &buf),
                 expired: FfiConverterBool.read(from: &buf)
             )
         case 8: return try .Build(
-                message: FfiConverterString.read(from: &buf)
+                details: FfiConverterString.read(from: &buf)
             )
         case 9: return try .State(
-                message: FfiConverterString.read(from: &buf)
+                details: FfiConverterString.read(from: &buf)
             )
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -1337,44 +1337,44 @@ public struct FfiConverterTypePubkyCoreError: FfiConverterRustBuffer {
 
     public static func write(_ value: PubkyCoreError, into buf: inout [UInt8]) {
         switch value {
-        case let .Transport(message):
+        case let .Transport(details):
             writeInt(&buf, Int32(1))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
 
-        case let .Server(status, message):
+        case let .Server(status, details):
             writeInt(&buf, Int32(2))
             FfiConverterUInt16.write(status, into: &buf)
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
 
-        case let .Validation(message):
+        case let .Validation(details):
             writeInt(&buf, Int32(3))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
 
-        case let .DecodeJson(message):
+        case let .DecodeJson(details):
             writeInt(&buf, Int32(4))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
 
-        case let .Pkarr(message, retryable):
+        case let .Pkarr(details, retryable):
             writeInt(&buf, Int32(5))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
             FfiConverterBool.write(retryable, into: &buf)
 
-        case let .Parse(message):
+        case let .Parse(details):
             writeInt(&buf, Int32(6))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
 
-        case let .Authentication(message, expired):
+        case let .Authentication(details, expired):
             writeInt(&buf, Int32(7))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
             FfiConverterBool.write(expired, into: &buf)
 
-        case let .Build(message):
+        case let .Build(details):
             writeInt(&buf, Int32(8))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
 
-        case let .State(message):
+        case let .State(details):
             writeInt(&buf, Int32(9))
-            FfiConverterString.write(message, into: &buf)
+            FfiConverterString.write(details, into: &buf)
         }
     }
 }

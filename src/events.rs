@@ -23,7 +23,7 @@ pub trait PubkyEventStreamListener: Send + Sync {
 
 fn parse_public_key(value: &str, label: &str) -> Result<PublicKey, PubkyCoreError> {
     PublicKey::try_from(value).map_err(|error| PubkyCoreError::Validation {
-        message: format!("invalid {label} public key: {error}"),
+        details: format!("invalid {label} public key: {error}"),
     })
 }
 
@@ -39,7 +39,7 @@ pub fn start_event_stream(
     TOKIO_RUNTIME.block_on(async {
         if config.users.is_empty() {
             return Err(PubkyCoreError::Validation {
-                message: "at least one event-stream user is required".to_string(),
+                details: "at least one event-stream user is required".to_string(),
             });
         }
 
@@ -73,7 +73,7 @@ pub fn start_event_stream(
         }
         if let Some(limit) = config.max_event_bytes {
             let limit = usize::try_from(limit).map_err(|_| PubkyCoreError::Validation {
-                message: "max_event_bytes exceeds the platform limit".to_string(),
+                details: "max_event_bytes exceeds the platform limit".to_string(),
             })?;
             builder = builder.max_event_bytes(limit);
         }

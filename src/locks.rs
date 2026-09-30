@@ -14,7 +14,7 @@ impl PubkyStorageLock {
     fn current_lock(&self) -> Result<StorageLock, PubkyCoreError> {
         let guard = self.lock.lock().unwrap();
         let lock = guard.as_ref().ok_or_else(|| PubkyCoreError::State {
-            message: "Storage lock has already been released".to_string(),
+            details: "Storage lock has already been released".to_string(),
         })?;
         Ok(lock.clone())
     }
