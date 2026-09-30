@@ -11,7 +11,7 @@ coordinating a migration across those apps.
 - **Public keys are always bare z-base32** (52 chars, no prefix) in every
   output: `public_key` fields, the session `pubky` field, `get_homeserver`,
   and the `publish`/`publish_https` return values. The underlying
-  `pubky` crate (0.10.x) renders `PublicKey::to_string()` as
+  `pubky` crate (0.14.x) renders `PublicKey::to_string()` as
   `pubky<z32>`, so all output sites must use `.z32()` instead — pubky's own
   storage URL parser rejects `pubky://pubky<z32>/...`, and downstream apps
   build `pubky://<key>/...` URLs from these values. Inputs accept either form.
@@ -22,7 +22,7 @@ coordinating a migration across those apps.
   `kind` (`"signin"` or `"signup"`; legacy `pubkyauth:///?...` URLs are
   `"signin"`) and, for signup links, optional `homeserver` (bare z32) and
   `signup_token` fields.
-- **Authentication mirrors pubky 0.10.** Grant auth is exposed through
+- **Authentication mirrors pubky 0.14.** Grant auth is exposed through
   `sign_up_grant`, `sign_in_grant`, `start_grant_auth_flow`, and
   `await_grant_auth_approval`; these return `grant_secret` in session JSON.
   The unqualified `sign_up`, `sign_in`, `start_auth_flow`, and

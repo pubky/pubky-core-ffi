@@ -101,6 +101,7 @@ async fn export_grant_session_secret(session: &PubkySession) -> Result<String, S
         .ok_or_else(|| "Session secret is unavailable for this session type".to_string())
 }
 
+#[allow(deprecated)]
 fn export_cookie_session_secret(session: &PubkySession) -> Result<String, String> {
     session
         .as_cookie()

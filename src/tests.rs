@@ -85,7 +85,7 @@ mod tests {
     }
 
     // Guard the bare-z32 public key output contract (see README "String
-    // Contracts"). pubky 0.10.x renders PublicKey::to_string() as
+    // Contracts"). pubky 0.14.x renders PublicKey::to_string() as
     // "pubky<z32>" (57 chars); FFI outputs must stay bare z32 (52 chars) or
     // downstream pubky:// URL building breaks. We assert on length rather
     // than a "pubky" prefix because all five prefix letters are in the
@@ -319,7 +319,7 @@ mod tests {
         assert!(json.get("homeserver").is_none());
     }
 
-    // Test auth URL parsing (pubky 0.10 Grant signin format)
+    // Test auth URL parsing (pubky 0.14 Grant signin format)
     #[test]
     fn test_parse_auth_url_signin_grant_host() {
         let client_pubky = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
@@ -358,7 +358,7 @@ mod tests {
         assert!(json.get("signup_token").is_none());
     }
 
-    // Test auth URL parsing (pubky 0.10 Grant signup format with hs/st params)
+    // Test auth URL parsing (pubky 0.14 Grant signup format with hs/st params)
     #[test]
     fn test_parse_auth_url_signup_grant() {
         let client_pubky = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
