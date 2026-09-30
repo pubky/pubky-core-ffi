@@ -2090,6 +2090,7 @@ version = "0.4.0"
 dependencies = [
  "base64 0.22.1",
  "bip39",
+ "futures-util",
  "hex",
  "jni",
  "once_cell",
@@ -2099,6 +2100,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.8",
+ "thiserror 2.0.18",
  "tokio",
  "uniffi",
  "url",

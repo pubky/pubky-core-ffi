@@ -1,5 +1,107 @@
 use serde::Serialize;
 
+/// Configuration used when rebuilding the process-wide Pubky client.
+///
+/// All timeout values are milliseconds. `None` preserves Pubky's default for
+/// that setting. Reconfiguration affects subsequently created sessions and
+/// requests; sessions already restored by a call are not retained globally.
+#[derive(Clone, Debug, Default, uniffi::Record)]
+pub struct PubkyClientConfig {
+    pub use_testnet: bool,
+    pub testnet_host: Option<String>,
+    pub request_timeout_ms: Option<u64>,
+    pub read_timeout_ms: Option<u64>,
+    pub pool_max_idle_per_host: Option<u64>,
+    pub max_error_body_bytes: Option<u64>,
+    pub user_agent_extra: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, uniffi::Record)]
+pub struct StorageListOptions {
+    pub reverse: bool,
+    pub shallow: bool,
+    pub limit: Option<u16>,
+    pub cursor: Option<String>,
+}
+
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct StorageListPage {
+    pub entries: Vec<String>,
+    /// Pass this value as `cursor` to retrieve the next page.
+    pub next_cursor: Option<String>,
+}
+
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct StorageResourceStats {
+    pub content_length: Option<u64>,
+    pub content_type: Option<String>,
+    /// Milliseconds since the Unix epoch.
+    pub last_modified_ms: Option<u64>,
+    pub etag: Option<String>,
+}
+
+/// Complete configuration for a local Grant authentication flow.
+#[derive(Clone, Debug, Default, uniffi::Record)]
+pub struct GrantAuthFlowConfig {
+    pub capabilities: String,
+    pub client_id: String,
+    /// Presence selects a signup flow; absence selects signin.
+    pub homeserver: Option<String>,
+    pub signup_token: Option<String>,
+    pub relay: Option<String>,
+    /// Exactly 32 bytes. A random relay secret is used when omitted.
+    pub client_secret: Option<Vec<u8>>,
+    /// Exactly 32 bytes. A random proof-of-possession key is used when omitted.
+    pub client_key_secret: Option<Vec<u8>>,
+    pub x_source: Option<String>,
+    pub x_success: Option<String>,
+    pub x_error: Option<String>,
+    pub x_cancel: Option<String>,
+}
+
+/// Sensitive, temporary state for resuming a pending local Grant flow.
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct GrantAuthFlowStateRecord {
+    pub authorization_url: String,
+    pub client_key_secret: Vec<u8>,
+}
+
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct EventStreamUser {
+    pub public_key: String,
+    pub cursor: Option<u64>,
+}
+
+#[derive(Clone, Debug, Default, uniffi::Record)]
+pub struct EventStreamConfig {
+    pub users: Vec<EventStreamUser>,
+    pub homeserver: Option<String>,
+    pub paths: Vec<String>,
+    pub limit: Option<u16>,
+    pub max_event_bytes: Option<u64>,
+    pub live: bool,
+    pub reverse: bool,
+    /// Required for private `/priv/...` paths.
+    pub session_secret: Option<String>,
+}
+
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct PubkyStorageEvent {
+    /// `PUT` or `DEL`.
+    pub event_type: String,
+    pub resource: String,
+    pub cursor: u64,
+    /// Blake3 hash in hexadecimal for `PUT`; absent for `DEL`.
+    pub content_hash: Option<String>,
+}
+
+#[derive(Clone, Debug, uniffi::Record)]
+pub struct StorageLockInfo {
+    pub path: String,
+    pub token: String,
+    pub timeout_seconds: u64,
+}
+
 #[derive(Debug, Serialize)]
 pub struct Capability {
     pub path: String,

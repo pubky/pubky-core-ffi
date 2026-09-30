@@ -1,13 +1,25 @@
+#![allow(unpredictable_function_pointer_comparisons)]
+
 mod auth;
+mod auth_flow;
+mod binding_error;
+mod events;
 mod keypair;
+mod locks;
 #[cfg(target_os = "android")]
 mod rustls_init;
+mod storage;
 mod tests;
 mod types;
 mod utils;
 
 pub use auth::*;
+pub use auth_flow::*;
+pub use binding_error::*;
+pub use events::*;
 pub use keypair::*;
+pub use locks::*;
+pub use storage::*;
 pub use types::*;
 pub use utils::*;
 
@@ -26,7 +38,7 @@ use pubky::recovery_file;
 #[allow(deprecated)]
 use pubky::{
     AuthFlowKind, Capabilities, ClientId, GrantId, GrantManager, Pubky, PubkyCookieAuthFlow,
-    PubkyGrantAuthFlow, PubkySession, PublicKey,
+    PubkyGrantAuthFlow, PubkyHttpClient, PubkySession, PublicKey,
 };
 use serde_json::json;
 use std::str;
@@ -37,36 +49,99 @@ use tokio::runtime::Runtime;
 use tokio::time;
 
 pub struct NetworkClient {
-    client: Mutex<Arc<Pubky>>,
+    state: Mutex<NetworkState>,
+}
+
+struct NetworkState {
+    client: Arc<Pubky>,
+    http: PubkyHttpClient,
 }
 
 impl NetworkClient {
     fn new() -> Self {
+        let http = PubkyHttpClient::new().unwrap();
         Self {
-            client: Mutex::new(Arc::new(Pubky::new().unwrap())),
+            state: Mutex::new(NetworkState {
+                client: Arc::new(Pubky::with_client(http.clone())),
+                http,
+            }),
         }
     }
 
     pub fn switch_network(&self, use_testnet: bool) {
-        let new_client = if use_testnet {
-            Arc::new(Pubky::testnet().unwrap())
+        let http = if use_testnet {
+            PubkyHttpClient::testnet().unwrap()
         } else {
-            Arc::new(Pubky::new().unwrap())
+            PubkyHttpClient::new().unwrap()
         };
 
-        let mut client = self.client.lock().unwrap();
-        *client = new_client;
+        *self.state.lock().unwrap() = NetworkState {
+            client: Arc::new(Pubky::with_client(http.clone())),
+            http,
+        };
+    }
+
+    pub fn configure(&self, config: PubkyClientConfig) -> Result<(), PubkyCoreError> {
+        let mut builder = PubkyHttpClient::builder();
+
+        if let Some(host) = config.testnet_host.as_deref() {
+            builder.testnet_with_host(host);
+        } else if config.use_testnet {
+            builder.testnet();
+        }
+
+        if let Some(timeout) = config.request_timeout_ms {
+            builder.request_timeout(Duration::from_millis(timeout));
+        }
+        if let Some(timeout) = config.read_timeout_ms {
+            builder.read_timeout(Duration::from_millis(timeout));
+        }
+        if let Some(max) = config.pool_max_idle_per_host {
+            let max = usize::try_from(max).map_err(|_| PubkyCoreError::Validation {
+                message: "pool_max_idle_per_host exceeds the platform limit".to_string(),
+            })?;
+            builder.pool_max_idle_per_host(max);
+        }
+        if let Some(limit) = config.max_error_body_bytes {
+            let limit = usize::try_from(limit).map_err(|_| PubkyCoreError::Validation {
+                message: "max_error_body_bytes exceeds the platform limit".to_string(),
+            })?;
+            builder.max_error_body_bytes(limit);
+        }
+        if let Some(extra) = config.user_agent_extra {
+            builder.user_agent_extra(extra);
+        }
+
+        let http = builder.build()?;
+        *self.state.lock().unwrap() = NetworkState {
+            client: Arc::new(Pubky::with_client(http.clone())),
+            http,
+        };
+        Ok(())
     }
 
     pub fn get_client(&self) -> Arc<Pubky> {
-        self.client.lock().unwrap().clone()
+        self.state.lock().unwrap().client.clone()
+    }
+
+    pub fn get_http_client(&self) -> PubkyHttpClient {
+        self.state.lock().unwrap().http.clone()
     }
 }
 
-static NETWORK_CLIENT: Lazy<NetworkClient> = Lazy::new(|| NetworkClient::new());
+static NETWORK_CLIENT: Lazy<NetworkClient> = Lazy::new(NetworkClient::new);
 
 pub fn get_pubky_client() -> Arc<Pubky> {
     NETWORK_CLIENT.get_client()
+}
+
+pub fn get_pubky_http_client() -> PubkyHttpClient {
+    NETWORK_CLIENT.get_http_client()
+}
+
+#[uniffi::export]
+pub fn configure_client(config: PubkyClientConfig) -> Result<(), PubkyCoreError> {
+    NETWORK_CLIENT.configure(config)
 }
 
 #[uniffi::export]

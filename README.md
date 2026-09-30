@@ -39,6 +39,32 @@ coordinating a migration across those apps.
 - **Grant management requires a root-capability session.** `list_grants`
   returns the account's active grants and `revoke_grant` revokes a grant by
   id, invalidating all sessions minted from it.
+- **New Pubky 0.14 APIs use typed native errors.** Existing functions keep the
+  `[error, data]` vector contract. The additive storage, event, lock, client
+  configuration, blocking-signin, and advanced Grant-flow APIs return native
+  `Result` values with `PubkyCoreError` variants instead.
+
+## Pubky 0.14 Client Bindings
+
+The high-level Pubky 0.14 client surface is available to generated Swift,
+Kotlin, and Python bindings:
+
+- Client configuration: request/read timeouts, connection pooling, bounded
+  error bodies, user-agent suffixes, mainnet, and custom-host testnet.
+- Storage: public and authenticated reads, public and private paths, raw bytes,
+  existence checks, metadata, paginated listings, writes, and deletes.
+- Authentication: Grant signin and signup flows, relay and callback
+  configuration, save/restore, non-blocking polling, cancellation, blocking
+  signin, session revalidation, and Grant management.
+- Events: historical and live streams, multiple users, cursors, path filters,
+  private authenticated streams, reverse order, limits, and cancellation.
+- Locks: acquire, inspect, refresh, write, delete, and unlock.
+- Structured failures: transport, server status, validation, JSON decoding,
+  PKARR retryability, parsing, authentication expiry, build, and binding-state
+  errors.
+
+See [BINDING_PARITY.md](BINDING_PARITY.md) for the SDK-to-FFI mapping and the
+small set of Rust-specific low-level primitives intentionally kept internal.
 
 ## Building the SDK
 

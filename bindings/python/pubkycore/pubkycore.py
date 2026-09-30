@@ -512,6 +512,12 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_await_grant_auth_approval() != 15252:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_await_grant_auth_flow() != 25430:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_cancel_grant_auth_flow() != 21408:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_configure_client() != 49656:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_create_recovery_file() != 48846:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_decrypt_recovery_file() != 26407:
@@ -536,11 +542,23 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_list() != 43198:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_list_grants() != 59792:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_mnemonic_phrase_to_keypair() != 45784:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_parse_auth_url() != 27379:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_parse_deep_link() != 29971:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_poll_grant_auth_flow() != 62466:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_public_exists() != 55217:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_public_get_bytes() != 37051:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_public_list() != 13947:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_public_stats() != 55842:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_publish() != 48989:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -558,7 +576,27 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_resolve_https() != 17266:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_restore_grant_auth_flow() != 41658:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_revalidate_session() != 57726:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_revoke_grant() != 15677:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_save_grant_auth_flow() != 63609:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_session_delete() != 42303:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_session_exists() != 49208:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_session_get_bytes() != 63122:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_session_list() != 37640:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_session_lock() != 27857:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_session_put_bytes() != 63275:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_session_stats() != 20269:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_set_event_listener() != 60071:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -566,7 +604,11 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_sign_in_cookie() != 28058:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_sign_in_cookie_blocking() != 31194:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_sign_in_grant() != 49219:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_sign_in_grant_blocking() != 6356:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_sign_out() != 27163:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
@@ -580,13 +622,37 @@ def _uniffi_check_api_checksums(lib):
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_start_cookie_auth_flow() != 49536:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_start_event_stream() != 33730:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_start_grant_auth_flow() != 48937:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_start_grant_auth_flow_with_config() != 31556:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_stop_all_event_streams() != 58496:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_func_stop_event_stream() != 11015:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_switch_network() != 64215:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_func_validate_mnemonic_phrase() != 30362:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkystoragelock_delete() != 25786:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkystoragelock_info() != 33361:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkystoragelock_put() != 1671:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkystoragelock_refresh() != 5441:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkystoragelock_unlock() != 14327:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     if lib.uniffi_pubkycore_checksum_method_eventlistener_on_event_occurred() != 11531:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_event() != 590:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_error() != 13809:
+        raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    if lib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_complete() != 17264:
         raise InternalError("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
 
 # A ctypes library to expose the extern-C FFI definitions.
@@ -598,11 +664,48 @@ _UniffiLib.uniffi_pubkycore_fn_free_eventnotifier.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_free_eventnotifier.restype = None
+_UniffiLib.uniffi_pubkycore_fn_free_pubkystoragelock.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_free_pubkystoragelock.restype = None
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_delete.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_delete.restype = None
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_info.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_info.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_put.argtypes = (
+    ctypes.c_void_p,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_put.restype = None
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_refresh.argtypes = (
+    ctypes.c_void_p,
+    ctypes.c_uint64,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_refresh.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_unlock.argtypes = (
+    ctypes.c_void_p,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_unlock.restype = None
 _UniffiLib.uniffi_pubkycore_fn_init_callback_eventlistener.argtypes = (
     _UNIFFI_FOREIGN_CALLBACK_T,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_init_callback_eventlistener.restype = None
+_UniffiLib.uniffi_pubkycore_fn_init_callback_pubkyeventstreamlistener.argtypes = (
+    _UNIFFI_FOREIGN_CALLBACK_T,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_init_callback_pubkyeventstreamlistener.restype = None
 _UniffiLib.uniffi_pubkycore_fn_func_auth.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -621,6 +724,19 @@ _UniffiLib.uniffi_pubkycore_fn_func_await_grant_auth_approval.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_await_grant_auth_approval.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_await_grant_auth_flow.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_await_grant_auth_flow.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_cancel_grant_auth_flow.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_cancel_grant_auth_flow.restype = None
+_UniffiLib.uniffi_pubkycore_fn_func_configure_client.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_configure_client.restype = None
 _UniffiLib.uniffi_pubkycore_fn_func_create_recovery_file.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -684,6 +800,11 @@ _UniffiLib.uniffi_pubkycore_fn_func_list.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_list.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_list_grants.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_list_grants.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_mnemonic_phrase_to_keypair.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -699,6 +820,31 @@ _UniffiLib.uniffi_pubkycore_fn_func_parse_deep_link.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_parse_deep_link.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_poll_grant_auth_flow.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_poll_grant_auth_flow.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_public_exists.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_public_exists.restype = ctypes.c_int8
+_UniffiLib.uniffi_pubkycore_fn_func_public_get_bytes.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_public_get_bytes.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_public_list.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_public_list.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_public_stats.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_public_stats.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_publish.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
@@ -748,11 +894,71 @@ _UniffiLib.uniffi_pubkycore_fn_func_resolve_https.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_resolve_https.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_restore_grant_auth_flow.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_restore_grant_auth_flow.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_revalidate_session.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_revalidate_session.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_revoke_grant.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_revoke_grant.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_save_grant_auth_flow.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_save_grant_auth_flow.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_session_delete.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_session_delete.restype = None
+_UniffiLib.uniffi_pubkycore_fn_func_session_exists.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_session_exists.restype = ctypes.c_int8
+_UniffiLib.uniffi_pubkycore_fn_func_session_get_bytes.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_session_get_bytes.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_session_list.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_session_list.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_session_lock.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.c_uint64,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_session_lock.restype = ctypes.c_void_p
+_UniffiLib.uniffi_pubkycore_fn_func_session_put_bytes.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_session_put_bytes.restype = None
+_UniffiLib.uniffi_pubkycore_fn_func_session_stats.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_session_stats.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_set_event_listener.argtypes = (
     ctypes.c_uint64,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -769,12 +975,23 @@ _UniffiLib.uniffi_pubkycore_fn_func_sign_in_cookie.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_sign_in_cookie.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_sign_in_cookie_blocking.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_sign_in_cookie_blocking.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_sign_in_grant.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_sign_in_grant.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_sign_in_grant_blocking.argtypes = (
+    _UniffiRustBuffer,
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_sign_in_grant_blocking.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_sign_out.argtypes = (
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -814,12 +1031,32 @@ _UniffiLib.uniffi_pubkycore_fn_func_start_cookie_auth_flow.argtypes = (
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_start_cookie_auth_flow.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_start_event_stream.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.c_uint64,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_start_event_stream.restype = _UniffiRustBuffer
 _UniffiLib.uniffi_pubkycore_fn_func_start_grant_auth_flow.argtypes = (
     _UniffiRustBuffer,
     _UniffiRustBuffer,
     ctypes.POINTER(_UniffiRustCallStatus),
 )
 _UniffiLib.uniffi_pubkycore_fn_func_start_grant_auth_flow.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_start_grant_auth_flow_with_config.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_start_grant_auth_flow_with_config.restype = _UniffiRustBuffer
+_UniffiLib.uniffi_pubkycore_fn_func_stop_all_event_streams.argtypes = (
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_stop_all_event_streams.restype = ctypes.c_uint64
+_UniffiLib.uniffi_pubkycore_fn_func_stop_event_stream.argtypes = (
+    _UniffiRustBuffer,
+    ctypes.POINTER(_UniffiRustCallStatus),
+)
+_UniffiLib.uniffi_pubkycore_fn_func_stop_event_stream.restype = ctypes.c_int8
 _UniffiLib.uniffi_pubkycore_fn_func_switch_network.argtypes = (
     ctypes.c_int8,
     ctypes.POINTER(_UniffiRustCallStatus),
@@ -1101,6 +1338,15 @@ _UniffiLib.uniffi_pubkycore_checksum_func_await_cookie_auth_approval.restype = c
 _UniffiLib.uniffi_pubkycore_checksum_func_await_grant_auth_approval.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_await_grant_auth_approval.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_await_grant_auth_flow.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_await_grant_auth_flow.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_cancel_grant_auth_flow.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_cancel_grant_auth_flow.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_configure_client.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_configure_client.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_create_recovery_file.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_create_recovery_file.restype = ctypes.c_uint16
@@ -1137,6 +1383,9 @@ _UniffiLib.uniffi_pubkycore_checksum_func_get_signup_token.restype = ctypes.c_ui
 _UniffiLib.uniffi_pubkycore_checksum_func_list.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_list.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_list_grants.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_list_grants.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_mnemonic_phrase_to_keypair.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_mnemonic_phrase_to_keypair.restype = ctypes.c_uint16
@@ -1146,6 +1395,21 @@ _UniffiLib.uniffi_pubkycore_checksum_func_parse_auth_url.restype = ctypes.c_uint
 _UniffiLib.uniffi_pubkycore_checksum_func_parse_deep_link.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_parse_deep_link.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_poll_grant_auth_flow.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_poll_grant_auth_flow.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_public_exists.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_public_exists.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_public_get_bytes.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_public_get_bytes.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_public_list.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_public_list.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_public_stats.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_public_stats.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_publish.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_publish.restype = ctypes.c_uint16
@@ -1170,9 +1434,39 @@ _UniffiLib.uniffi_pubkycore_checksum_func_resolve.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_resolve_https.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_resolve_https.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_restore_grant_auth_flow.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_restore_grant_auth_flow.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_revalidate_session.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_revalidate_session.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_revoke_grant.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_revoke_grant.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_save_grant_auth_flow.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_save_grant_auth_flow.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_session_delete.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_session_delete.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_session_exists.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_session_exists.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_session_get_bytes.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_session_get_bytes.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_session_list.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_session_list.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_session_lock.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_session_lock.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_session_put_bytes.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_session_put_bytes.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_session_stats.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_session_stats.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_set_event_listener.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_set_event_listener.restype = ctypes.c_uint16
@@ -1182,9 +1476,15 @@ _UniffiLib.uniffi_pubkycore_checksum_func_sign_in.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_in_cookie.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_in_cookie.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_sign_in_cookie_blocking.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_sign_in_cookie_blocking.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_in_grant.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_in_grant.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_sign_in_grant_blocking.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_sign_in_grant_blocking.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_out.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_sign_out.restype = ctypes.c_uint16
@@ -1203,18 +1503,54 @@ _UniffiLib.uniffi_pubkycore_checksum_func_start_auth_flow.restype = ctypes.c_uin
 _UniffiLib.uniffi_pubkycore_checksum_func_start_cookie_auth_flow.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_start_cookie_auth_flow.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_start_event_stream.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_start_event_stream.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_start_grant_auth_flow.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_start_grant_auth_flow.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_start_grant_auth_flow_with_config.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_start_grant_auth_flow_with_config.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_stop_all_event_streams.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_stop_all_event_streams.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_func_stop_event_stream.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_func_stop_event_stream.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_switch_network.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_switch_network.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_func_validate_mnemonic_phrase.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_func_validate_mnemonic_phrase.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_delete.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_delete.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_info.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_info.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_put.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_put.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_refresh.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_refresh.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_unlock.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkystoragelock_unlock.restype = ctypes.c_uint16
 _UniffiLib.uniffi_pubkycore_checksum_method_eventlistener_on_event_occurred.argtypes = (
 )
 _UniffiLib.uniffi_pubkycore_checksum_method_eventlistener_on_event_occurred.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_event.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_event.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_error.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_error.restype = ctypes.c_uint16
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_complete.argtypes = (
+)
+_UniffiLib.uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_complete.restype = ctypes.c_uint16
 _UniffiLib.ffi_pubkycore_uniffi_contract_version.argtypes = (
 )
 _UniffiLib.ffi_pubkycore_uniffi_contract_version.restype = ctypes.c_uint32
@@ -1225,6 +1561,32 @@ _uniffi_check_api_checksums(_UniffiLib)
 
 # Public interface members begin here.
 
+
+class _UniffiConverterUInt16(_UniffiConverterPrimitiveInt):
+    CLASS_NAME = "u16"
+    VALUE_MIN = 0
+    VALUE_MAX = 2**16
+
+    @staticmethod
+    def read(buf):
+        return buf.read_u16()
+
+    @staticmethod
+    def write_unchecked(value, buf):
+        buf.write_u16(value)
+
+class _UniffiConverterUInt64(_UniffiConverterPrimitiveInt):
+    CLASS_NAME = "u64"
+    VALUE_MIN = 0
+    VALUE_MAX = 2**64
+
+    @staticmethod
+    def read(buf):
+        return buf.read_u64()
+
+    @staticmethod
+    def write_unchecked(value, buf):
+        buf.write_u64(value)
 
 class _UniffiConverterBool(_UniffiConverterPrimitive):
     @classmethod
@@ -1277,6 +1639,23 @@ class _UniffiConverterString:
             builder.write(value.encode("utf-8"))
             return builder.finalize()
 
+class _UniffiConverterBytes(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        size = buf.read_i32()
+        if size < 0:
+            raise InternalError("Unexpected negative byte string length")
+        return buf.read(size)
+
+    @staticmethod
+    def write(value, buf):
+        try:
+            memoryview(value)
+        except TypeError:
+            raise TypeError("a bytes-like object is required, not {!r}".format(type(value).__name__))
+        buf.write_i32(len(value))
+        buf.write(value)
+
 
 
 class EventNotifier:
@@ -1319,6 +1698,743 @@ class _UniffiConverterTypeEventNotifier:
     @staticmethod
     def lower(value):
         return value._pointer
+
+
+
+class PubkyStorageLock:
+    _pointer: ctypes.c_void_p
+
+    def __del__(self):
+        # In case of partial initialization of instances.
+        pointer = getattr(self, "_pointer", None)
+        if pointer is not None:
+            _rust_call(_UniffiLib.uniffi_pubkycore_fn_free_pubkystoragelock, pointer)
+
+    # Used by alternative constructors or any methods which return this type.
+    @classmethod
+    def _make_instance_(cls, pointer):
+        # Lightly yucky way to bypass the usual __init__ logic
+        # and just create a new instance with the required pointer.
+        inst = cls.__new__(cls)
+        inst._pointer = pointer
+        return inst
+
+
+    def delete(self, ):
+        _rust_call_with_error(
+    _UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_delete,self._pointer,)
+
+
+
+
+
+
+
+    def info(self, ) -> "StorageLockInfo":
+        return _UniffiConverterTypeStorageLockInfo.lift(
+            _rust_call_with_error(
+    _UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_info,self._pointer,)
+        )
+
+
+
+
+
+
+    def put(self, content: "bytes"):
+
+        _rust_call_with_error(
+    _UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_put,self._pointer,
+        _UniffiConverterBytes.lower(content))
+
+
+
+
+
+
+
+    def refresh(self, timeout_seconds: "int") -> "StorageLockInfo":
+
+        return _UniffiConverterTypeStorageLockInfo.lift(
+            _rust_call_with_error(
+    _UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_refresh,self._pointer,
+        _UniffiConverterUInt64.lower(timeout_seconds))
+        )
+
+
+
+
+
+
+    def unlock(self, ):
+        _rust_call_with_error(
+    _UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_method_pubkystoragelock_unlock,self._pointer,)
+
+
+
+
+
+
+
+class _UniffiConverterTypePubkyStorageLock:
+    @classmethod
+    def read(cls, buf):
+        ptr = buf.read_u64()
+        if ptr == 0:
+            raise InternalError("Raw pointer value was null")
+        return cls.lift(ptr)
+
+    @classmethod
+    def write(cls, value, buf):
+        if not isinstance(value, PubkyStorageLock):
+            raise TypeError("Expected PubkyStorageLock instance, {} found".format(type(value).__name__))
+        buf.write_u64(cls.lower(value))
+
+    @staticmethod
+    def lift(value):
+        return PubkyStorageLock._make_instance_(value)
+
+    @staticmethod
+    def lower(value):
+        return value._pointer
+
+
+class EventStreamConfig:
+    users: "typing.List[EventStreamUser]";homeserver: "typing.Optional[str]";paths: "typing.List[str]";limit: "typing.Optional[int]";max_event_bytes: "typing.Optional[int]";live: "bool";reverse: "bool";session_secret: "typing.Optional[str]";
+
+    @typing.no_type_check
+    def __init__(self, users: "typing.List[EventStreamUser]", homeserver: "typing.Optional[str]", paths: "typing.List[str]", limit: "typing.Optional[int]", max_event_bytes: "typing.Optional[int]", live: "bool", reverse: "bool", session_secret: "typing.Optional[str]"):
+        self.users = users
+        self.homeserver = homeserver
+        self.paths = paths
+        self.limit = limit
+        self.max_event_bytes = max_event_bytes
+        self.live = live
+        self.reverse = reverse
+        self.session_secret = session_secret
+
+    def __str__(self):
+        return "EventStreamConfig(users={}, homeserver={}, paths={}, limit={}, max_event_bytes={}, live={}, reverse={}, session_secret={})".format(self.users, self.homeserver, self.paths, self.limit, self.max_event_bytes, self.live, self.reverse, self.session_secret)
+
+    def __eq__(self, other):
+        if self.users != other.users:
+            return False
+        if self.homeserver != other.homeserver:
+            return False
+        if self.paths != other.paths:
+            return False
+        if self.limit != other.limit:
+            return False
+        if self.max_event_bytes != other.max_event_bytes:
+            return False
+        if self.live != other.live:
+            return False
+        if self.reverse != other.reverse:
+            return False
+        if self.session_secret != other.session_secret:
+            return False
+        return True
+
+class _UniffiConverterTypeEventStreamConfig(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return EventStreamConfig(
+            users=_UniffiConverterSequenceTypeEventStreamUser.read(buf),
+            homeserver=_UniffiConverterOptionalString.read(buf),
+            paths=_UniffiConverterSequenceString.read(buf),
+            limit=_UniffiConverterOptionalUInt16.read(buf),
+            max_event_bytes=_UniffiConverterOptionalUInt64.read(buf),
+            live=_UniffiConverterBool.read(buf),
+            reverse=_UniffiConverterBool.read(buf),
+            session_secret=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterSequenceTypeEventStreamUser.write(value.users, buf)
+        _UniffiConverterOptionalString.write(value.homeserver, buf)
+        _UniffiConverterSequenceString.write(value.paths, buf)
+        _UniffiConverterOptionalUInt16.write(value.limit, buf)
+        _UniffiConverterOptionalUInt64.write(value.max_event_bytes, buf)
+        _UniffiConverterBool.write(value.live, buf)
+        _UniffiConverterBool.write(value.reverse, buf)
+        _UniffiConverterOptionalString.write(value.session_secret, buf)
+
+
+class EventStreamUser:
+    public_key: "str";cursor: "typing.Optional[int]";
+
+    @typing.no_type_check
+    def __init__(self, public_key: "str", cursor: "typing.Optional[int]"):
+        self.public_key = public_key
+        self.cursor = cursor
+
+    def __str__(self):
+        return "EventStreamUser(public_key={}, cursor={})".format(self.public_key, self.cursor)
+
+    def __eq__(self, other):
+        if self.public_key != other.public_key:
+            return False
+        if self.cursor != other.cursor:
+            return False
+        return True
+
+class _UniffiConverterTypeEventStreamUser(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return EventStreamUser(
+            public_key=_UniffiConverterString.read(buf),
+            cursor=_UniffiConverterOptionalUInt64.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.public_key, buf)
+        _UniffiConverterOptionalUInt64.write(value.cursor, buf)
+
+
+class GrantAuthFlowConfig:
+    capabilities: "str";client_id: "str";homeserver: "typing.Optional[str]";signup_token: "typing.Optional[str]";relay: "typing.Optional[str]";client_secret: "typing.Optional[bytes]";client_key_secret: "typing.Optional[bytes]";x_source: "typing.Optional[str]";x_success: "typing.Optional[str]";x_error: "typing.Optional[str]";x_cancel: "typing.Optional[str]";
+
+    @typing.no_type_check
+    def __init__(self, capabilities: "str", client_id: "str", homeserver: "typing.Optional[str]", signup_token: "typing.Optional[str]", relay: "typing.Optional[str]", client_secret: "typing.Optional[bytes]", client_key_secret: "typing.Optional[bytes]", x_source: "typing.Optional[str]", x_success: "typing.Optional[str]", x_error: "typing.Optional[str]", x_cancel: "typing.Optional[str]"):
+        self.capabilities = capabilities
+        self.client_id = client_id
+        self.homeserver = homeserver
+        self.signup_token = signup_token
+        self.relay = relay
+        self.client_secret = client_secret
+        self.client_key_secret = client_key_secret
+        self.x_source = x_source
+        self.x_success = x_success
+        self.x_error = x_error
+        self.x_cancel = x_cancel
+
+    def __str__(self):
+        return "GrantAuthFlowConfig(capabilities={}, client_id={}, homeserver={}, signup_token={}, relay={}, client_secret={}, client_key_secret={}, x_source={}, x_success={}, x_error={}, x_cancel={})".format(self.capabilities, self.client_id, self.homeserver, self.signup_token, self.relay, self.client_secret, self.client_key_secret, self.x_source, self.x_success, self.x_error, self.x_cancel)
+
+    def __eq__(self, other):
+        if self.capabilities != other.capabilities:
+            return False
+        if self.client_id != other.client_id:
+            return False
+        if self.homeserver != other.homeserver:
+            return False
+        if self.signup_token != other.signup_token:
+            return False
+        if self.relay != other.relay:
+            return False
+        if self.client_secret != other.client_secret:
+            return False
+        if self.client_key_secret != other.client_key_secret:
+            return False
+        if self.x_source != other.x_source:
+            return False
+        if self.x_success != other.x_success:
+            return False
+        if self.x_error != other.x_error:
+            return False
+        if self.x_cancel != other.x_cancel:
+            return False
+        return True
+
+class _UniffiConverterTypeGrantAuthFlowConfig(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return GrantAuthFlowConfig(
+            capabilities=_UniffiConverterString.read(buf),
+            client_id=_UniffiConverterString.read(buf),
+            homeserver=_UniffiConverterOptionalString.read(buf),
+            signup_token=_UniffiConverterOptionalString.read(buf),
+            relay=_UniffiConverterOptionalString.read(buf),
+            client_secret=_UniffiConverterOptionalBytes.read(buf),
+            client_key_secret=_UniffiConverterOptionalBytes.read(buf),
+            x_source=_UniffiConverterOptionalString.read(buf),
+            x_success=_UniffiConverterOptionalString.read(buf),
+            x_error=_UniffiConverterOptionalString.read(buf),
+            x_cancel=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.capabilities, buf)
+        _UniffiConverterString.write(value.client_id, buf)
+        _UniffiConverterOptionalString.write(value.homeserver, buf)
+        _UniffiConverterOptionalString.write(value.signup_token, buf)
+        _UniffiConverterOptionalString.write(value.relay, buf)
+        _UniffiConverterOptionalBytes.write(value.client_secret, buf)
+        _UniffiConverterOptionalBytes.write(value.client_key_secret, buf)
+        _UniffiConverterOptionalString.write(value.x_source, buf)
+        _UniffiConverterOptionalString.write(value.x_success, buf)
+        _UniffiConverterOptionalString.write(value.x_error, buf)
+        _UniffiConverterOptionalString.write(value.x_cancel, buf)
+
+
+class GrantAuthFlowStateRecord:
+    authorization_url: "str";client_key_secret: "bytes";
+
+    @typing.no_type_check
+    def __init__(self, authorization_url: "str", client_key_secret: "bytes"):
+        self.authorization_url = authorization_url
+        self.client_key_secret = client_key_secret
+
+    def __str__(self):
+        return "GrantAuthFlowStateRecord(authorization_url={}, client_key_secret={})".format(self.authorization_url, self.client_key_secret)
+
+    def __eq__(self, other):
+        if self.authorization_url != other.authorization_url:
+            return False
+        if self.client_key_secret != other.client_key_secret:
+            return False
+        return True
+
+class _UniffiConverterTypeGrantAuthFlowStateRecord(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return GrantAuthFlowStateRecord(
+            authorization_url=_UniffiConverterString.read(buf),
+            client_key_secret=_UniffiConverterBytes.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.authorization_url, buf)
+        _UniffiConverterBytes.write(value.client_key_secret, buf)
+
+
+class PubkyClientConfig:
+    use_testnet: "bool";testnet_host: "typing.Optional[str]";request_timeout_ms: "typing.Optional[int]";read_timeout_ms: "typing.Optional[int]";pool_max_idle_per_host: "typing.Optional[int]";max_error_body_bytes: "typing.Optional[int]";user_agent_extra: "typing.Optional[str]";
+
+    @typing.no_type_check
+    def __init__(self, use_testnet: "bool", testnet_host: "typing.Optional[str]", request_timeout_ms: "typing.Optional[int]", read_timeout_ms: "typing.Optional[int]", pool_max_idle_per_host: "typing.Optional[int]", max_error_body_bytes: "typing.Optional[int]", user_agent_extra: "typing.Optional[str]"):
+        self.use_testnet = use_testnet
+        self.testnet_host = testnet_host
+        self.request_timeout_ms = request_timeout_ms
+        self.read_timeout_ms = read_timeout_ms
+        self.pool_max_idle_per_host = pool_max_idle_per_host
+        self.max_error_body_bytes = max_error_body_bytes
+        self.user_agent_extra = user_agent_extra
+
+    def __str__(self):
+        return "PubkyClientConfig(use_testnet={}, testnet_host={}, request_timeout_ms={}, read_timeout_ms={}, pool_max_idle_per_host={}, max_error_body_bytes={}, user_agent_extra={})".format(self.use_testnet, self.testnet_host, self.request_timeout_ms, self.read_timeout_ms, self.pool_max_idle_per_host, self.max_error_body_bytes, self.user_agent_extra)
+
+    def __eq__(self, other):
+        if self.use_testnet != other.use_testnet:
+            return False
+        if self.testnet_host != other.testnet_host:
+            return False
+        if self.request_timeout_ms != other.request_timeout_ms:
+            return False
+        if self.read_timeout_ms != other.read_timeout_ms:
+            return False
+        if self.pool_max_idle_per_host != other.pool_max_idle_per_host:
+            return False
+        if self.max_error_body_bytes != other.max_error_body_bytes:
+            return False
+        if self.user_agent_extra != other.user_agent_extra:
+            return False
+        return True
+
+class _UniffiConverterTypePubkyClientConfig(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PubkyClientConfig(
+            use_testnet=_UniffiConverterBool.read(buf),
+            testnet_host=_UniffiConverterOptionalString.read(buf),
+            request_timeout_ms=_UniffiConverterOptionalUInt64.read(buf),
+            read_timeout_ms=_UniffiConverterOptionalUInt64.read(buf),
+            pool_max_idle_per_host=_UniffiConverterOptionalUInt64.read(buf),
+            max_error_body_bytes=_UniffiConverterOptionalUInt64.read(buf),
+            user_agent_extra=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterBool.write(value.use_testnet, buf)
+        _UniffiConverterOptionalString.write(value.testnet_host, buf)
+        _UniffiConverterOptionalUInt64.write(value.request_timeout_ms, buf)
+        _UniffiConverterOptionalUInt64.write(value.read_timeout_ms, buf)
+        _UniffiConverterOptionalUInt64.write(value.pool_max_idle_per_host, buf)
+        _UniffiConverterOptionalUInt64.write(value.max_error_body_bytes, buf)
+        _UniffiConverterOptionalString.write(value.user_agent_extra, buf)
+
+
+class PubkyStorageEvent:
+    event_type: "str";resource: "str";cursor: "int";content_hash: "typing.Optional[str]";
+
+    @typing.no_type_check
+    def __init__(self, event_type: "str", resource: "str", cursor: "int", content_hash: "typing.Optional[str]"):
+        self.event_type = event_type
+        self.resource = resource
+        self.cursor = cursor
+        self.content_hash = content_hash
+
+    def __str__(self):
+        return "PubkyStorageEvent(event_type={}, resource={}, cursor={}, content_hash={})".format(self.event_type, self.resource, self.cursor, self.content_hash)
+
+    def __eq__(self, other):
+        if self.event_type != other.event_type:
+            return False
+        if self.resource != other.resource:
+            return False
+        if self.cursor != other.cursor:
+            return False
+        if self.content_hash != other.content_hash:
+            return False
+        return True
+
+class _UniffiConverterTypePubkyStorageEvent(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return PubkyStorageEvent(
+            event_type=_UniffiConverterString.read(buf),
+            resource=_UniffiConverterString.read(buf),
+            cursor=_UniffiConverterUInt64.read(buf),
+            content_hash=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.event_type, buf)
+        _UniffiConverterString.write(value.resource, buf)
+        _UniffiConverterUInt64.write(value.cursor, buf)
+        _UniffiConverterOptionalString.write(value.content_hash, buf)
+
+
+class StorageListOptions:
+    reverse: "bool";shallow: "bool";limit: "typing.Optional[int]";cursor: "typing.Optional[str]";
+
+    @typing.no_type_check
+    def __init__(self, reverse: "bool", shallow: "bool", limit: "typing.Optional[int]", cursor: "typing.Optional[str]"):
+        self.reverse = reverse
+        self.shallow = shallow
+        self.limit = limit
+        self.cursor = cursor
+
+    def __str__(self):
+        return "StorageListOptions(reverse={}, shallow={}, limit={}, cursor={})".format(self.reverse, self.shallow, self.limit, self.cursor)
+
+    def __eq__(self, other):
+        if self.reverse != other.reverse:
+            return False
+        if self.shallow != other.shallow:
+            return False
+        if self.limit != other.limit:
+            return False
+        if self.cursor != other.cursor:
+            return False
+        return True
+
+class _UniffiConverterTypeStorageListOptions(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return StorageListOptions(
+            reverse=_UniffiConverterBool.read(buf),
+            shallow=_UniffiConverterBool.read(buf),
+            limit=_UniffiConverterOptionalUInt16.read(buf),
+            cursor=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterBool.write(value.reverse, buf)
+        _UniffiConverterBool.write(value.shallow, buf)
+        _UniffiConverterOptionalUInt16.write(value.limit, buf)
+        _UniffiConverterOptionalString.write(value.cursor, buf)
+
+
+class StorageListPage:
+    entries: "typing.List[str]";next_cursor: "typing.Optional[str]";
+
+    @typing.no_type_check
+    def __init__(self, entries: "typing.List[str]", next_cursor: "typing.Optional[str]"):
+        self.entries = entries
+        self.next_cursor = next_cursor
+
+    def __str__(self):
+        return "StorageListPage(entries={}, next_cursor={})".format(self.entries, self.next_cursor)
+
+    def __eq__(self, other):
+        if self.entries != other.entries:
+            return False
+        if self.next_cursor != other.next_cursor:
+            return False
+        return True
+
+class _UniffiConverterTypeStorageListPage(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return StorageListPage(
+            entries=_UniffiConverterSequenceString.read(buf),
+            next_cursor=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterSequenceString.write(value.entries, buf)
+        _UniffiConverterOptionalString.write(value.next_cursor, buf)
+
+
+class StorageLockInfo:
+    path: "str";token: "str";timeout_seconds: "int";
+
+    @typing.no_type_check
+    def __init__(self, path: "str", token: "str", timeout_seconds: "int"):
+        self.path = path
+        self.token = token
+        self.timeout_seconds = timeout_seconds
+
+    def __str__(self):
+        return "StorageLockInfo(path={}, token={}, timeout_seconds={})".format(self.path, self.token, self.timeout_seconds)
+
+    def __eq__(self, other):
+        if self.path != other.path:
+            return False
+        if self.token != other.token:
+            return False
+        if self.timeout_seconds != other.timeout_seconds:
+            return False
+        return True
+
+class _UniffiConverterTypeStorageLockInfo(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return StorageLockInfo(
+            path=_UniffiConverterString.read(buf),
+            token=_UniffiConverterString.read(buf),
+            timeout_seconds=_UniffiConverterUInt64.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterString.write(value.path, buf)
+        _UniffiConverterString.write(value.token, buf)
+        _UniffiConverterUInt64.write(value.timeout_seconds, buf)
+
+
+class StorageResourceStats:
+    content_length: "typing.Optional[int]";content_type: "typing.Optional[str]";last_modified_ms: "typing.Optional[int]";etag: "typing.Optional[str]";
+
+    @typing.no_type_check
+    def __init__(self, content_length: "typing.Optional[int]", content_type: "typing.Optional[str]", last_modified_ms: "typing.Optional[int]", etag: "typing.Optional[str]"):
+        self.content_length = content_length
+        self.content_type = content_type
+        self.last_modified_ms = last_modified_ms
+        self.etag = etag
+
+    def __str__(self):
+        return "StorageResourceStats(content_length={}, content_type={}, last_modified_ms={}, etag={})".format(self.content_length, self.content_type, self.last_modified_ms, self.etag)
+
+    def __eq__(self, other):
+        if self.content_length != other.content_length:
+            return False
+        if self.content_type != other.content_type:
+            return False
+        if self.last_modified_ms != other.last_modified_ms:
+            return False
+        if self.etag != other.etag:
+            return False
+        return True
+
+class _UniffiConverterTypeStorageResourceStats(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        return StorageResourceStats(
+            content_length=_UniffiConverterOptionalUInt64.read(buf),
+            content_type=_UniffiConverterOptionalString.read(buf),
+            last_modified_ms=_UniffiConverterOptionalUInt64.read(buf),
+            etag=_UniffiConverterOptionalString.read(buf),
+        )
+
+    @staticmethod
+    def write(value, buf):
+        _UniffiConverterOptionalUInt64.write(value.content_length, buf)
+        _UniffiConverterOptionalString.write(value.content_type, buf)
+        _UniffiConverterOptionalUInt64.write(value.last_modified_ms, buf)
+        _UniffiConverterOptionalString.write(value.etag, buf)
+
+
+# PubkyCoreError
+# We want to define each variant as a nested class that's also a subclass,
+# which is tricky in Python.  To accomplish this we're going to create each
+# class separately, then manually add the child classes to the base class's
+# __dict__.  All of this happens in dummy class to avoid polluting the module
+# namespace.
+class PubkyCoreError(Exception):
+    pass
+
+_UniffiTempPubkyCoreError = PubkyCoreError
+
+class PubkyCoreError:  # type: ignore
+    class Transport(_UniffiTempPubkyCoreError):
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "PubkyCoreError.Transport({})".format(str(self))
+    _UniffiTempPubkyCoreError.Transport = Transport # type: ignore
+    class Server(_UniffiTempPubkyCoreError):
+        def __init__(self, status, message):
+            super().__init__(", ".join([
+                "status={!r}".format(status),
+                "message={!r}".format(message),
+            ]))
+            self.status = status
+            self.message = message
+        def __repr__(self):
+            return "PubkyCoreError.Server({})".format(str(self))
+    _UniffiTempPubkyCoreError.Server = Server # type: ignore
+    class Validation(_UniffiTempPubkyCoreError):
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "PubkyCoreError.Validation({})".format(str(self))
+    _UniffiTempPubkyCoreError.Validation = Validation # type: ignore
+    class DecodeJson(_UniffiTempPubkyCoreError):
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "PubkyCoreError.DecodeJson({})".format(str(self))
+    _UniffiTempPubkyCoreError.DecodeJson = DecodeJson # type: ignore
+    class Pkarr(_UniffiTempPubkyCoreError):
+        def __init__(self, message, retryable):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+                "retryable={!r}".format(retryable),
+            ]))
+            self.message = message
+            self.retryable = retryable
+        def __repr__(self):
+            return "PubkyCoreError.Pkarr({})".format(str(self))
+    _UniffiTempPubkyCoreError.Pkarr = Pkarr # type: ignore
+    class Parse(_UniffiTempPubkyCoreError):
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "PubkyCoreError.Parse({})".format(str(self))
+    _UniffiTempPubkyCoreError.Parse = Parse # type: ignore
+    class Authentication(_UniffiTempPubkyCoreError):
+        def __init__(self, message, expired):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+                "expired={!r}".format(expired),
+            ]))
+            self.message = message
+            self.expired = expired
+        def __repr__(self):
+            return "PubkyCoreError.Authentication({})".format(str(self))
+    _UniffiTempPubkyCoreError.Authentication = Authentication # type: ignore
+    class Build(_UniffiTempPubkyCoreError):
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "PubkyCoreError.Build({})".format(str(self))
+    _UniffiTempPubkyCoreError.Build = Build # type: ignore
+    class State(_UniffiTempPubkyCoreError):
+        def __init__(self, message):
+            super().__init__(", ".join([
+                "message={!r}".format(message),
+            ]))
+            self.message = message
+        def __repr__(self):
+            return "PubkyCoreError.State({})".format(str(self))
+    _UniffiTempPubkyCoreError.State = State # type: ignore
+
+PubkyCoreError = _UniffiTempPubkyCoreError # type: ignore
+del _UniffiTempPubkyCoreError
+
+
+class _UniffiConverterTypePubkyCoreError(_UniffiConverterRustBuffer):
+    @staticmethod
+    def read(buf):
+        variant = buf.read_i32()
+        if variant == 1:
+            return PubkyCoreError.Transport(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 2:
+            return PubkyCoreError.Server(
+                status=_UniffiConverterUInt16.read(buf),
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 3:
+            return PubkyCoreError.Validation(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 4:
+            return PubkyCoreError.DecodeJson(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 5:
+            return PubkyCoreError.Pkarr(
+                message=_UniffiConverterString.read(buf),
+                retryable=_UniffiConverterBool.read(buf),
+            )
+        if variant == 6:
+            return PubkyCoreError.Parse(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 7:
+            return PubkyCoreError.Authentication(
+                message=_UniffiConverterString.read(buf),
+                expired=_UniffiConverterBool.read(buf),
+            )
+        if variant == 8:
+            return PubkyCoreError.Build(
+                message=_UniffiConverterString.read(buf),
+            )
+        if variant == 9:
+            return PubkyCoreError.State(
+                message=_UniffiConverterString.read(buf),
+            )
+        raise InternalError("Raw enum value doesn't match any cases")
+
+    @staticmethod
+    def write(value, buf):
+        if isinstance(value, PubkyCoreError.Transport):
+            buf.write_i32(1)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, PubkyCoreError.Server):
+            buf.write_i32(2)
+            _UniffiConverterUInt16.write(value.status, buf)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, PubkyCoreError.Validation):
+            buf.write_i32(3)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, PubkyCoreError.DecodeJson):
+            buf.write_i32(4)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, PubkyCoreError.Pkarr):
+            buf.write_i32(5)
+            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterBool.write(value.retryable, buf)
+        if isinstance(value, PubkyCoreError.Parse):
+            buf.write_i32(6)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, PubkyCoreError.Authentication):
+            buf.write_i32(7)
+            _UniffiConverterString.write(value.message, buf)
+            _UniffiConverterBool.write(value.expired, buf)
+        if isinstance(value, PubkyCoreError.Build):
+            buf.write_i32(8)
+            _UniffiConverterString.write(value.message, buf)
+        if isinstance(value, PubkyCoreError.State):
+            buf.write_i32(9)
+            _UniffiConverterString.write(value.message, buf)
 
 
 
@@ -1468,6 +2584,175 @@ _UniffiConverterCallbackInterfaceEventListener = _UniffiConverterCallbackInterfa
 
 
 
+
+
+# Declaration and _UniffiConverters for PubkyEventStreamListener Callback Interface
+
+class PubkyEventStreamListener:
+    def on_event(self, event: "PubkyStorageEvent"):
+        raise NotImplementedError
+
+    def on_error(self, message: "str"):
+        raise NotImplementedError
+
+    def on_complete(self, ):
+        raise NotImplementedError
+
+
+
+def py_foreignCallbackCallbackInterfacePubkyEventStreamListener(handle, method, args_data, args_len, buf_ptr):
+
+    def invoke_on_event(python_callback, args_stream, buf_ptr):
+        def makeCall():return python_callback.on_event(
+                _UniffiConverterTypePubkyStorageEvent.read(args_stream)
+                )
+
+        def makeCallAndHandleReturn():
+            makeCall()
+            return _UNIFFI_CALLBACK_SUCCESS
+        return makeCallAndHandleReturn()
+
+
+    def invoke_on_error(python_callback, args_stream, buf_ptr):
+        def makeCall():return python_callback.on_error(
+                _UniffiConverterString.read(args_stream)
+                )
+
+        def makeCallAndHandleReturn():
+            makeCall()
+            return _UNIFFI_CALLBACK_SUCCESS
+        return makeCallAndHandleReturn()
+
+
+    def invoke_on_complete(python_callback, args_stream, buf_ptr):
+        def makeCall():
+            return python_callback.on_complete()
+
+        def makeCallAndHandleReturn():
+            makeCall()
+            return _UNIFFI_CALLBACK_SUCCESS
+        return makeCallAndHandleReturn()
+
+
+
+    cb = _UniffiConverterCallbackInterfacePubkyEventStreamListener.lift(handle)
+    if not cb:
+        raise InternalError("No callback in handlemap; this is a uniffi bug")
+
+    if method == IDX_CALLBACK_FREE:
+        _UniffiConverterCallbackInterfacePubkyEventStreamListener.drop(handle)
+        # Successfull return
+        # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs`
+        return _UNIFFI_CALLBACK_SUCCESS
+
+    if method == 1:
+        # Call the method and handle any errors
+        # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for details
+        try:
+            return invoke_on_event(cb, _UniffiRustBufferStream(args_data, args_len), buf_ptr)
+        except BaseException as e:
+            # Catch unexpected errors
+            try:
+                # Try to serialize the exception into a String
+                buf_ptr[0] = _UniffiConverterString.lower(repr(e))
+            except:
+                # If that fails, just give up
+                pass
+            return _UNIFFI_CALLBACK_UNEXPECTED_ERROR
+    if method == 2:
+        # Call the method and handle any errors
+        # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for details
+        try:
+            return invoke_on_error(cb, _UniffiRustBufferStream(args_data, args_len), buf_ptr)
+        except BaseException as e:
+            # Catch unexpected errors
+            try:
+                # Try to serialize the exception into a String
+                buf_ptr[0] = _UniffiConverterString.lower(repr(e))
+            except:
+                # If that fails, just give up
+                pass
+            return _UNIFFI_CALLBACK_UNEXPECTED_ERROR
+    if method == 3:
+        # Call the method and handle any errors
+        # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for details
+        try:
+            return invoke_on_complete(cb, _UniffiRustBufferStream(args_data, args_len), buf_ptr)
+        except BaseException as e:
+            # Catch unexpected errors
+            try:
+                # Try to serialize the exception into a String
+                buf_ptr[0] = _UniffiConverterString.lower(repr(e))
+            except:
+                # If that fails, just give up
+                pass
+            return _UNIFFI_CALLBACK_UNEXPECTED_ERROR
+
+
+    # This should never happen, because an out of bounds method index won't
+    # ever be used. Once we can catch errors, we should return an InternalException.
+    # https://github.com/mozilla/uniffi-rs/issues/351
+
+    # An unexpected error happened.
+    # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs`
+    return _UNIFFI_CALLBACK_UNEXPECTED_ERROR
+
+# We need to keep this function reference alive:
+# if they get GC'd while in use then UniFFI internals could attempt to call a function
+# that is in freed memory.
+# That would be...uh...bad. Yeah, that's the word. Bad.
+foreignCallbackCallbackInterfacePubkyEventStreamListener = _UNIFFI_FOREIGN_CALLBACK_T(py_foreignCallbackCallbackInterfacePubkyEventStreamListener)
+_rust_call(lambda err: _UniffiLib.uniffi_pubkycore_fn_init_callback_pubkyeventstreamlistener(foreignCallbackCallbackInterfacePubkyEventStreamListener, err))
+
+# The _UniffiConverter which transforms the Callbacks in to Handles to pass to Rust.
+_UniffiConverterCallbackInterfacePubkyEventStreamListener = _UniffiConverterCallbackInterface(foreignCallbackCallbackInterfacePubkyEventStreamListener)
+
+
+
+class _UniffiConverterOptionalUInt16(_UniffiConverterRustBuffer):
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterUInt16.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterUInt16.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalUInt64(_UniffiConverterRustBuffer):
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterUInt64.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterUInt64.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
 class _UniffiConverterOptionalString(_UniffiConverterRustBuffer):
     @classmethod
     def write(cls, value, buf):
@@ -1485,6 +2770,50 @@ class _UniffiConverterOptionalString(_UniffiConverterRustBuffer):
             return None
         elif flag == 1:
             return _UniffiConverterString.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalBytes(_UniffiConverterRustBuffer):
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterBytes.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterBytes.read(buf)
+        else:
+            raise InternalError("Unexpected flag byte for optional type")
+
+
+
+class _UniffiConverterOptionalTypeStorageResourceStats(_UniffiConverterRustBuffer):
+    @classmethod
+    def write(cls, value, buf):
+        if value is None:
+            buf.write_u8(0)
+            return
+
+        buf.write_u8(1)
+        _UniffiConverterTypeStorageResourceStats.write(value, buf)
+
+    @classmethod
+    def read(cls, buf):
+        flag = buf.read_u8()
+        if flag == 0:
+            return None
+        elif flag == 1:
+            return _UniffiConverterTypeStorageResourceStats.read(buf)
         else:
             raise InternalError("Unexpected flag byte for optional type")
 
@@ -1508,6 +2837,26 @@ class _UniffiConverterSequenceString(_UniffiConverterRustBuffer):
             _UniffiConverterString.read(buf) for i in range(count)
         ]
 
+
+
+class _UniffiConverterSequenceTypeEventStreamUser(_UniffiConverterRustBuffer):
+    @classmethod
+    def write(cls, value, buf):
+        items = len(value)
+        buf.write_i32(items)
+        for item in value:
+            _UniffiConverterTypeEventStreamUser.write(item, buf)
+
+    @classmethod
+    def read(cls, buf):
+        count = buf.read_i32()
+        if count < 0:
+            raise InternalError("Unexpected negative sequence length")
+
+        return [
+            _UniffiConverterTypeEventStreamUser.read(buf) for i in range(count)
+        ]
+
 def auth(url: "str",secret_key: "str") -> "typing.List[str]":
 
 
@@ -1526,6 +2875,20 @@ def await_cookie_auth_approval() -> "typing.List[str]":
 
 def await_grant_auth_approval() -> "typing.List[str]":
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_await_grant_auth_approval,))
+
+
+def await_grant_auth_flow() -> "str":
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_await_grant_auth_flow,))
+
+
+def cancel_grant_auth_flow():
+    _rust_call(_UniffiLib.uniffi_pubkycore_fn_func_cancel_grant_auth_flow,)
+
+
+def configure_client(config: "PubkyClientConfig"):
+
+    _rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_configure_client,
+        _UniffiConverterTypePubkyClientConfig.lower(config))
 
 
 def create_recovery_file(secret_key: "str",passphrase: "str") -> "typing.List[str]":
@@ -1606,6 +2969,12 @@ def list(url: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(url)))
 
 
+def list_grants(session_secret: "str") -> "typing.List[str]":
+
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_list_grants,
+        _UniffiConverterString.lower(session_secret)))
+
+
 def mnemonic_phrase_to_keypair(mnemonic_phrase: "str") -> "typing.List[str]":
 
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_mnemonic_phrase_to_keypair,
@@ -1622,6 +2991,36 @@ def parse_deep_link(url: "str") -> "typing.List[str]":
 
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_parse_deep_link,
         _UniffiConverterString.lower(url)))
+
+
+def poll_grant_auth_flow() -> "typing.Optional[str]":
+    return _UniffiConverterOptionalString.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_poll_grant_auth_flow,))
+
+
+def public_exists(address: "str") -> "bool":
+
+    return _UniffiConverterBool.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_public_exists,
+        _UniffiConverterString.lower(address)))
+
+
+def public_get_bytes(address: "str") -> "bytes":
+
+    return _UniffiConverterBytes.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_public_get_bytes,
+        _UniffiConverterString.lower(address)))
+
+
+def public_list(address: "str",options: "StorageListOptions") -> "StorageListPage":
+
+
+    return _UniffiConverterTypeStorageListPage.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_public_list,
+        _UniffiConverterString.lower(address),
+        _UniffiConverterTypeStorageListOptions.lower(options)))
+
+
+def public_stats(address: "str") -> "typing.Optional[StorageResourceStats]":
+
+    return _UniffiConverterOptionalTypeStorageResourceStats.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_public_stats,
+        _UniffiConverterString.lower(address)))
 
 
 def publish(record_name: "str",record_content: "str",secret_key: "str") -> "typing.List[str]":
@@ -1690,9 +3089,89 @@ def resolve_https(public_key: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(public_key)))
 
 
+def restore_grant_auth_flow(state: "GrantAuthFlowStateRecord") -> "str":
+
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_restore_grant_auth_flow,
+        _UniffiConverterTypeGrantAuthFlowStateRecord.lower(state)))
+
+
 def revalidate_session(session_secret: "str") -> "typing.List[str]":
 
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_revalidate_session,
+        _UniffiConverterString.lower(session_secret)))
+
+
+def revoke_grant(session_secret: "str",grant_id: "str") -> "typing.List[str]":
+
+
+    return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_revoke_grant,
+        _UniffiConverterString.lower(session_secret),
+        _UniffiConverterString.lower(grant_id)))
+
+
+def save_grant_auth_flow() -> "GrantAuthFlowStateRecord":
+    return _UniffiConverterTypeGrantAuthFlowStateRecord.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_save_grant_auth_flow,))
+
+
+def session_delete(path_or_address: "str",session_secret: "str"):
+
+
+    _rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_session_delete,
+        _UniffiConverterString.lower(path_or_address),
+        _UniffiConverterString.lower(session_secret))
+
+
+def session_exists(path_or_address: "str",session_secret: "str") -> "bool":
+
+
+    return _UniffiConverterBool.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_session_exists,
+        _UniffiConverterString.lower(path_or_address),
+        _UniffiConverterString.lower(session_secret)))
+
+
+def session_get_bytes(path_or_address: "str",session_secret: "str") -> "bytes":
+
+
+    return _UniffiConverterBytes.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_session_get_bytes,
+        _UniffiConverterString.lower(path_or_address),
+        _UniffiConverterString.lower(session_secret)))
+
+
+def session_list(path_or_address: "str",session_secret: "str",options: "StorageListOptions") -> "StorageListPage":
+
+
+
+    return _UniffiConverterTypeStorageListPage.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_session_list,
+        _UniffiConverterString.lower(path_or_address),
+        _UniffiConverterString.lower(session_secret),
+        _UniffiConverterTypeStorageListOptions.lower(options)))
+
+
+def session_lock(path_or_address: "str",session_secret: "str",timeout_seconds: "int") -> "PubkyStorageLock":
+
+
+
+    return _UniffiConverterTypePubkyStorageLock.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_session_lock,
+        _UniffiConverterString.lower(path_or_address),
+        _UniffiConverterString.lower(session_secret),
+        _UniffiConverterUInt64.lower(timeout_seconds)))
+
+
+def session_put_bytes(path_or_address: "str",content: "bytes",session_secret: "str"):
+
+
+
+    _rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_session_put_bytes,
+        _UniffiConverterString.lower(path_or_address),
+        _UniffiConverterBytes.lower(content),
+        _UniffiConverterString.lower(session_secret))
+
+
+def session_stats(path_or_address: "str",session_secret: "str") -> "typing.Optional[StorageResourceStats]":
+
+
+    return _UniffiConverterOptionalTypeStorageResourceStats.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_session_stats,
+        _UniffiConverterString.lower(path_or_address),
         _UniffiConverterString.lower(session_secret)))
 
 
@@ -1716,10 +3195,24 @@ def sign_in_cookie(secret_key: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(secret_key)))
 
 
+def sign_in_cookie_blocking(secret_key: "str") -> "str":
+
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_sign_in_cookie_blocking,
+        _UniffiConverterString.lower(secret_key)))
+
+
 def sign_in_grant(secret_key: "str",client_id: "str") -> "typing.List[str]":
 
 
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_sign_in_grant,
+        _UniffiConverterString.lower(secret_key),
+        _UniffiConverterString.lower(client_id)))
+
+
+def sign_in_grant_blocking(secret_key: "str",client_id: "str") -> "str":
+
+
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_sign_in_grant_blocking,
         _UniffiConverterString.lower(secret_key),
         _UniffiConverterString.lower(client_id)))
 
@@ -1778,12 +3271,36 @@ def start_cookie_auth_flow(capabilities_str: "str") -> "typing.List[str]":
         _UniffiConverterString.lower(capabilities_str)))
 
 
+def start_event_stream(config: "EventStreamConfig",listener: "PubkyEventStreamListener") -> "str":
+
+
+    return _UniffiConverterString.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_start_event_stream,
+        _UniffiConverterTypeEventStreamConfig.lower(config),
+        _UniffiConverterCallbackInterfacePubkyEventStreamListener.lower(listener)))
+
+
 def start_grant_auth_flow(capabilities_str: "str",client_id: "str") -> "typing.List[str]":
 
 
     return _UniffiConverterSequenceString.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_start_grant_auth_flow,
         _UniffiConverterString.lower(capabilities_str),
         _UniffiConverterString.lower(client_id)))
+
+
+def start_grant_auth_flow_with_config(config: "GrantAuthFlowConfig") -> "GrantAuthFlowStateRecord":
+
+    return _UniffiConverterTypeGrantAuthFlowStateRecord.lift(_rust_call_with_error(_UniffiConverterTypePubkyCoreError,_UniffiLib.uniffi_pubkycore_fn_func_start_grant_auth_flow_with_config,
+        _UniffiConverterTypeGrantAuthFlowConfig.lower(config)))
+
+
+def stop_all_event_streams() -> "int":
+    return _UniffiConverterUInt64.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_stop_all_event_streams,))
+
+
+def stop_event_stream(subscription_id: "str") -> "bool":
+
+    return _UniffiConverterBool.lift(_rust_call(_UniffiLib.uniffi_pubkycore_fn_func_stop_event_stream,
+        _UniffiConverterString.lower(subscription_id)))
 
 
 def switch_network(use_testnet: "bool") -> "typing.List[str]":
@@ -1800,10 +3317,24 @@ def validate_mnemonic_phrase(mnemonic_phrase: "str") -> "typing.List[str]":
 
 __all__ = [
     "InternalError",
+    "PubkyCoreError",
+    "EventStreamConfig",
+    "EventStreamUser",
+    "GrantAuthFlowConfig",
+    "GrantAuthFlowStateRecord",
+    "PubkyClientConfig",
+    "PubkyStorageEvent",
+    "StorageListOptions",
+    "StorageListPage",
+    "StorageLockInfo",
+    "StorageResourceStats",
     "auth",
     "await_auth_approval",
     "await_cookie_auth_approval",
     "await_grant_auth_approval",
+    "await_grant_auth_flow",
+    "cancel_grant_auth_flow",
+    "configure_client",
     "create_recovery_file",
     "decrypt_recovery_file",
     "delete_file",
@@ -1816,9 +3347,15 @@ __all__ = [
     "get_public_key_from_secret_key",
     "get_signup_token",
     "list",
+    "list_grants",
     "mnemonic_phrase_to_keypair",
     "parse_auth_url",
     "parse_deep_link",
+    "poll_grant_auth_flow",
+    "public_exists",
+    "public_get_bytes",
+    "public_list",
+    "public_stats",
     "publish",
     "publish_https",
     "put",
@@ -1827,21 +3364,39 @@ __all__ = [
     "republish_homeserver",
     "resolve",
     "resolve_https",
+    "restore_grant_auth_flow",
     "revalidate_session",
+    "revoke_grant",
+    "save_grant_auth_flow",
+    "session_delete",
+    "session_exists",
+    "session_get_bytes",
+    "session_list",
+    "session_lock",
+    "session_put_bytes",
+    "session_stats",
     "set_event_listener",
     "sign_in",
     "sign_in_cookie",
+    "sign_in_cookie_blocking",
     "sign_in_grant",
+    "sign_in_grant_blocking",
     "sign_out",
     "sign_up",
     "sign_up_cookie",
     "sign_up_grant",
     "start_auth_flow",
     "start_cookie_auth_flow",
+    "start_event_stream",
     "start_grant_auth_flow",
+    "start_grant_auth_flow_with_config",
+    "stop_all_event_streams",
+    "stop_event_stream",
     "switch_network",
     "validate_mnemonic_phrase",
     "EventNotifier",
+    "PubkyStorageLock",
     "EventListener",
+    "PubkyEventStreamListener",
 ]
 
