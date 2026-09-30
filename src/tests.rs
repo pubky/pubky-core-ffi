@@ -214,6 +214,15 @@ mod tests {
             .as_str()
             .expect("grant_secret missing")
             .to_string();
+        assert_eq!(
+            session["client_id"].as_str().expect("client_id missing"),
+            CLIENT_ID
+        );
+        assert!(session["homeserver"].as_str().is_some());
+        assert!(session["grant_id"].as_str().is_some());
+        assert!(session["token_expires_at"].as_u64().is_some());
+        assert!(session["grant_expires_at"].as_u64().is_some());
+        assert!(session["created_at"].as_u64().is_some());
 
         // Test sign out
         let sign_out_result = sign_out(grant_secret);
@@ -432,6 +441,28 @@ mod tests {
         let grant_result = await_grant_auth_approval();
         assert_eq!(grant_result[0], "true");
         assert_eq!(grant_result[1], "No auth flow in progress");
+    }
+
+    #[test]
+    fn test_grant_management_rejects_invalid_inputs() {
+        let list_result = list_grants("not-a-grant-secret".to_string());
+        assert_eq!(list_result[0], "true");
+        assert!(
+            list_result[1].contains("Failed to import session"),
+            "unexpected error: {}",
+            list_result[1]
+        );
+
+        let revoke_result = revoke_grant(
+            "not-a-grant-secret".to_string(),
+            "not-a-grant-id-over-22-chars".to_string(),
+        );
+        assert_eq!(revoke_result[0], "true");
+        assert!(
+            revoke_result[1].contains("Invalid grant id"),
+            "unexpected error: {}",
+            revoke_result[1]
+        );
     }
 
     // Test error cases
