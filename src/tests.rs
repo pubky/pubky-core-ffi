@@ -85,7 +85,7 @@ mod tests {
     }
 
     // Guard the bare-z32 public key output contract (see README "String
-    // Contracts"). pubky 0.10.x renders PublicKey::to_string() as
+    // Contracts"). pubky 0.16.x renders PublicKey::to_string() as
     // "pubky<z32>" (57 chars); FFI outputs must stay bare z32 (52 chars) or
     // downstream pubky:// URL building breaks. We assert on length rather
     // than a "pubky" prefix because all five prefix letters are in the
@@ -319,7 +319,7 @@ mod tests {
         assert!(json.get("homeserver").is_none());
     }
 
-    // Test auth URL parsing (pubky 0.10 Grant signin format)
+    // Test auth URL parsing (pubky 0.16 Grant signin format)
     #[test]
     fn test_parse_auth_url_signin_grant_host() {
         let client_pubky = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
@@ -332,6 +332,25 @@ mod tests {
         assert_eq!(json["client_id"], "pubky-ring");
         assert_eq!(json["client_public_key"], client_pubky);
         assert!(json.get("homeserver").is_none());
+        assert_eq!(json["approval_format"], "bare_grant");
+    }
+
+    #[test]
+    fn test_parse_auth_url_signed_approval_grant() {
+        let client_pubky = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
+        let ephemeral_public_key = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        let test_url = format!(
+            "pubkyauth://signin_grant?caps=%2Fpriv%2Fexample%2F%3Are&relay=https%3A%2F%2Fhttprelay.pubky.app%2Finbox&cid=example.app&cpk={client_pubky}&af=v1&epk={ephemeral_public_key}"
+        );
+        let result = parse_auth_url(test_url);
+        assert_eq!(result[0], "false", "unexpected error: {}", result[1]);
+
+        let json: serde_json::Value = serde_json::from_str(&result[1]).unwrap();
+        assert_eq!(json["kind"], "signin_grant");
+        assert_eq!(json["approval_format"], "signed_approval_v1");
+        assert_eq!(json["ephemeral_public_key"], ephemeral_public_key);
+        assert!(json.get("secret").is_none());
+        assert_eq!(json["capabilities"][0]["permission"], "re");
     }
 
     // Test auth URL parsing (pubky 0.9.1 signup format with hs/st params)
@@ -358,7 +377,7 @@ mod tests {
         assert!(json.get("signup_token").is_none());
     }
 
-    // Test auth URL parsing (pubky 0.10 Grant signup format with hs/st params)
+    // Test auth URL parsing (pubky 0.16 Grant signup format with hs/st params)
     #[test]
     fn test_parse_auth_url_signup_grant() {
         let client_pubky = "ufibwbmed6jeq9k4p583go95wofakh9fwpp4k734trq79pd9u1uy";
@@ -584,6 +603,18 @@ mod tests {
         let result = validate_mnemonic_phrase(wrong_count.to_string());
         assert_eq!(result[0], "false");
         assert_eq!(result[1], "false");
+    }
+
+    #[test]
+    fn test_auth_with_capabilities_rejects_invalid_capabilities_before_authorizing() {
+        let result = auth_with_capabilities(
+            "not-a-url".to_string(),
+            "not-a-secret-key".to_string(),
+            "not-a-capability".to_string(),
+        );
+
+        assert_eq!(result[0], "true");
+        assert!(result[1].starts_with("Invalid approved capabilities:"));
     }
 
     // Test mnemonic consistency
