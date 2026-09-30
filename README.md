@@ -36,6 +36,9 @@ coordinating a migration across those apps.
   `revalidate_session`, `put_with_session`, and `delete_with_session` call
   `Pubky::restore_session`, so they accept a Grant `grant_secret` or a legacy
   cookie `session_secret`.
+- **Grant management requires a root-capability session.** `list_grants`
+  returns the account's active grants and `revoke_grant` revokes a grant by
+  id, invalidating all sessions minted from it.
 
 ## Building the SDK
 

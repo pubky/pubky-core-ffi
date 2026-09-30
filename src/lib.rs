@@ -25,8 +25,8 @@ use pubky::pkarr::{dns, SignedPacket};
 use pubky::recovery_file;
 #[allow(deprecated)]
 use pubky::{
-    AuthFlowKind, Capabilities, ClientId, Pubky, PubkyCookieAuthFlow, PubkyGrantAuthFlow,
-    PubkySession, PublicKey,
+    AuthFlowKind, Capabilities, ClientId, GrantId, GrantManager, Pubky, PubkyCookieAuthFlow,
+    PubkyGrantAuthFlow, PubkySession, PublicKey,
 };
 use serde_json::json;
 use std::str;
@@ -481,7 +481,11 @@ pub fn sign_up_grant(
                     Ok(secret) => secret,
                     Err(error) => return create_response_vector(true, error),
                 };
-                let session_data = session_to_json_with_grant_secret(&session, &grant_secret);
+                let session_data =
+                    match session_to_json_with_grant_secret(&session, &grant_secret).await {
+                        Ok(data) => data,
+                        Err(error) => return create_response_vector(true, error),
+                    };
                 create_response_vector(false, session_data)
             }
             Err(error) => create_response_vector(true, format!("signup failure: {}", error)),
@@ -593,7 +597,11 @@ pub fn sign_in_grant(secret_key: String, client_id: String) -> Vec<String> {
                     Ok(secret) => secret,
                     Err(error) => return create_response_vector(true, error),
                 };
-                let session_data = session_to_json_with_grant_secret(&session, &grant_secret);
+                let session_data =
+                    match session_to_json_with_grant_secret(&session, &grant_secret).await {
+                        Ok(data) => data,
+                        Err(error) => return create_response_vector(true, error),
+                    };
                 create_response_vector(false, session_data)
             }
             Err(error) => create_response_vector(true, format!("Failed to sign in: {}", error)),
@@ -650,6 +658,56 @@ pub fn sign_out(session_secret: String) -> Vec<String> {
 }
 
 #[uniffi::export]
+pub fn list_grants(session_secret: String) -> Vec<String> {
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let pubky_client = get_pubky_client();
+        let session = match pubky_client.restore_session(&session_secret).await {
+            Ok(session) => session,
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to import session: {}", error))
+            }
+        };
+
+        match GrantManager::new(&session).list().await {
+            Ok(grants) => match serde_json::to_string(&grants) {
+                Ok(json) => create_response_vector(false, json),
+                Err(error) => {
+                    create_response_vector(true, format!("Failed to serialize grants: {}", error))
+                }
+            },
+            Err(error) => create_response_vector(true, format!("Failed to list grants: {}", error)),
+        }
+    })
+}
+
+#[uniffi::export]
+pub fn revoke_grant(session_secret: String, grant_id: String) -> Vec<String> {
+    let grant_id = match GrantId::try_from(grant_id) {
+        Ok(grant_id) => grant_id,
+        Err(error) => return create_response_vector(true, format!("Invalid grant id: {}", error)),
+    };
+
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let pubky_client = get_pubky_client();
+        let session = match pubky_client.restore_session(&session_secret).await {
+            Ok(session) => session,
+            Err(error) => {
+                return create_response_vector(true, format!("Failed to import session: {}", error))
+            }
+        };
+
+        match GrantManager::new(&session).revoke(&grant_id).await {
+            Ok(()) => create_response_vector(false, "Grant revoked".to_string()),
+            Err(error) => {
+                create_response_vector(true, format!("Failed to revoke grant: {}", error))
+            }
+        }
+    })
+}
+
+#[uniffi::export]
 pub fn revalidate_session(session_secret: String) -> Vec<String> {
     let runtime = TOKIO_RUNTIME.clone();
     runtime.block_on(async {
@@ -676,10 +734,10 @@ pub fn revalidate_session(session_secret: String) -> Vec<String> {
                         Err(error) => return create_response_vector(true, error),
                     },
                 };
-                create_response_vector(
-                    false,
-                    session_to_json_with_grant_secret(&session, &grant_secret),
-                )
+                match session_to_json_with_grant_secret(&session, &grant_secret).await {
+                    Ok(data) => create_response_vector(false, data),
+                    Err(error) => create_response_vector(true, error),
+                }
             }
             Ok(None) => create_response_vector(
                 true,
@@ -1147,7 +1205,11 @@ pub fn await_grant_auth_approval() -> Vec<String> {
                     Ok(secret) => secret,
                     Err(error) => return create_response_vector(true, error),
                 };
-                let session_data = session_to_json_with_grant_secret(&session, &grant_secret);
+                let session_data =
+                    match session_to_json_with_grant_secret(&session, &grant_secret).await {
+                        Ok(data) => data,
+                        Err(error) => return create_response_vector(true, error),
+                    };
                 create_response_vector(false, session_data)
             }
             Err(e) => create_response_vector(true, format!("Auth approval failed: {}", e)),
