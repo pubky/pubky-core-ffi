@@ -227,15 +227,29 @@ pub fn session_to_json(session: &PubkySession) -> String {
     serde_json::to_string(&json_obj).unwrap_or_else(|e| format!("Failed to serialize JSON: {}", e))
 }
 
-pub fn session_to_json_with_grant_secret(session: &PubkySession, grant_secret: &str) -> String {
-    let info = session.info();
+pub async fn session_to_json_with_grant_secret(
+    session: &PubkySession,
+    grant_secret: &str,
+) -> Result<String, String> {
+    let info = session
+        .as_grant()
+        .ok_or_else(|| "Session is not grant-backed".to_string())?
+        .session_info()
+        .await;
     let json_obj = json!({
-        "pubky": info.public_key().z32(),
-        "capabilities": info.capabilities().iter().map(|c| c.to_string()).collect::<Vec<String>>(),
+        "homeserver": info.homeserver.z32(),
+        "pubky": info.pubky.z32(),
+        "client_id": info.client_id.to_string(),
+        "capabilities": info.capabilities.iter().map(|c| c.to_string()).collect::<Vec<String>>(),
+        "grant_id": info.grant_id.to_string(),
+        "token_expires_at": info.token_expires_at,
+        "grant_expires_at": info.grant_expires_at,
+        "created_at": info.created_at,
         "grant_secret": grant_secret,
     });
 
-    serde_json::to_string(&json_obj).unwrap_or_else(|e| format!("Failed to serialize JSON: {}", e))
+    serde_json::to_string(&json_obj)
+        .map_err(|error| format!("Failed to serialize session: {error}"))
 }
 
 pub fn session_to_json_with_cookie_secret(session: &PubkySession, session_secret: &str) -> String {
