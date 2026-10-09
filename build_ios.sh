@@ -1,6 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e  # Exit immediately if a command exits with a non-zero status.
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 echo "Starting iOS build process..."
 
@@ -19,10 +22,6 @@ export IPHONEOS_DEPLOYMENT_TARGET=13.4
 # Cargo Build
 echo "Building Rust libraries..."
 cargo build
-
-# Modify Cargo.toml
-echo "Updating Cargo.toml..."
-sed -i '' 's/crate[-_]type = .*/crate-type = ["cdylib", "staticlib"]/' Cargo.toml
 
 # Build release
 echo "Building release version..."
@@ -52,6 +51,11 @@ cargo run --bin uniffi-bindgen generate \
     --language swift \
     --out-dir ./bindings/ios \
     || { echo "Failed to generate Swift bindings"; exit 1; }
+
+perl -pi -e 's/[ \t]+$//' \
+    bindings/ios/pubkycore.swift \
+    bindings/ios/pubkycoreFFI.h \
+    bindings/ios/pubkycoreFFI.modulemap
 
 # Handle modulemap file
 echo "Handling modulemap file..."

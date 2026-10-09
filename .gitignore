@@ -1,10 +1,27 @@
+# IDE and operating system files
 .idea/
 .DS_Store
+
+# Rust build output and local tooling state
 /target/
 .rust-analyzer/
 .cargo/
-# Default ignored files
+
+# Generated native bindings and release archives
+/dist/
+/android/.gradle/
+/android/.kotlin/
+/android/**/build/
+/bindings/android/pubkycore.kt
+/bindings/android/jniLibs/
+/bindings/ios/*.xcframework/
+/bindings/python/pubkycore/*.so
+/bindings/python/pubkycore/*.dylib
+/bindings/python/pubkycore/*.dll
+
+# JetBrains project files
 /shelf/
 /workspace.xml
-# Editor-based HTTP Client requests
+
+# Editor HTTP client requests
 /httpRequests/
