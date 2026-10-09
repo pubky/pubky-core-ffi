@@ -1,0 +1,99 @@
+name: Native bindings
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Reject tracked build artifacts
+        run: ./scripts/verify_source_only.sh
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.13"
+      - uses: Swatinem/rust-cache@v2
+      - name: Resolve publication version
+        id: version
+        run: |
+          cargo_version="$(awk -F ' *= *' '/^\[package\]/{package=1; next} package && /^version *=/{gsub(/"/, "", $2); print $2; exit}' Cargo.toml)"
+          version="$cargo_version"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            if [[ "$version" != "$cargo_version" ]]; then
+              echo "Tag version $version does not match Cargo version $cargo_version." >&2
+              exit 1
+            fi
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+      - name: Install Android SDK components
+        run: |
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+            "build-tools;35.0.0" \
+            "ndk;$(tr -d '[:space:]' < .ndk-version)" \
+            "platforms;android-36"
+      - name: Build Android bindings
+        run: ./build_android.sh
+      - name: Build Maven publication
+        run: >-
+          gradle -p android
+          :library:publishAllPublicationsToBuildRepository
+          -PVERSION_NAME=${{ steps.version.outputs.value }}
+      - name: Verify Maven publication
+        run: >-
+          ./scripts/verify_android_maven_publication.sh
+          android/library/build/repo
+          ${{ steps.version.outputs.value }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pubky-core-android-maven
+          path: android/library/build/repo
+          if-no-files-found: error
+      - name: Publish Android library to GitHub Packages
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          gradle -p android
+          :library:publishAllPublicationsToGitHubPackagesRepository
+          -PVERSION_NAME=${{ steps.version.outputs.value }}
+
+  ios:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v7
+      - name: Reject tracked build artifacts
+        run: ./scripts/verify_source_only.sh
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Validate Swift package manifest
+        run: swift package dump-package >/dev/null
+      - name: Build iOS bindings
+        run: ./build_ios.sh
+      - name: Package iOS bindings
+        run: ./scripts/package_ios_bindings.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pubky-core-ffi-ios-ci-validation
+          path: |
+            dist/pubky-core-ffi-ios.zip
+            dist/PubkyCore.xcframework.zip
+          if-no-files-found: error
