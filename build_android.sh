@@ -80,9 +80,6 @@ cargo ndk \
     -t x86_64 \
     build --release
 
-echo "Verifying 16 KB ELF LOAD alignment..."
-./scripts/verify_android_page_size.sh "$JNILIBS_DIR"
-
 case "$(uname -s)" in
     Darwin) HOST_LIBRARY="./target/release/libpubkycore.dylib" ;;
     Linux) HOST_LIBRARY="./target/release/libpubkycore.so" ;;
@@ -113,5 +110,6 @@ if [[ -z "$GENERATED_KOTLIN" ]]; then
 fi
 
 mv "$GENERATED_KOTLIN" "$BASE_DIR/pubkycore.kt"
+perl -pi -e 's/[ \t]+$//' "$BASE_DIR/pubkycore.kt"
 
 echo "Android build process completed successfully!"

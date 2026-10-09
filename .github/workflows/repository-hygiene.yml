@@ -1,0 +1,15 @@
+name: Repository hygiene
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  source-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Reject tracked build artifacts
+        run: ./scripts/verify_source_only.sh

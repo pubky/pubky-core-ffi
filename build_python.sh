@@ -1,6 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e  # Exit immediately if a command exits with a non-zero status.
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 echo "Starting Python build process..."
 
@@ -20,16 +23,6 @@ rm -rf "$PACKAGE_DIR"/*
 # Cargo Build
 echo "Building Rust libraries..."
 cargo build
-
-# Modify Cargo.toml to ensure correct crate type
-echo "Updating Cargo.toml..."
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    sed -i '' 's/crate[-_]type = .*/crate-type = ["cdylib"]/' Cargo.toml
-else
-    # Linux and others
-    sed -i 's/crate[-_]type = .*/crate-type = ["cdylib"]/' Cargo.toml
-fi
 
 # Build release
 echo "Building release version..."
@@ -83,6 +76,8 @@ if command -v yapf >/dev/null 2>&1; then
 else
     echo "Note: yapf not found. Skipping Python code formatting."
 fi
+
+perl -pi -e 's/[ \t]+$//' "$PACKAGE_DIR"/*.py
 
 # Create __init__.py
 touch "$PACKAGE_DIR/__init__.py"
