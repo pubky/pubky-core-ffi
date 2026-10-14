@@ -1,13 +1,27 @@
+#![allow(unpredictable_function_pointer_comparisons)]
+
 mod auth;
+mod auth_flow;
+mod binding_error;
+mod events;
+mod grant_features;
 mod keypair;
+mod locks;
 #[cfg(target_os = "android")]
 mod rustls_init;
+mod storage;
 mod tests;
 mod types;
 mod utils;
 
 pub use auth::*;
+pub use auth_flow::*;
+pub use binding_error::*;
+pub use events::*;
+pub use grant_features::*;
 pub use keypair::*;
+pub use locks::*;
+pub use storage::*;
 pub use types::*;
 pub use utils::*;
 
@@ -26,7 +40,7 @@ use pubky::recovery_file;
 #[allow(deprecated)]
 use pubky::{
     AuthFlowKind, Capabilities, ClientId, GrantId, GrantManager, Pubky, PubkyCookieAuthFlow,
-    PubkyGrantAuthFlow, PubkySession, PublicKey,
+    PubkyGrantAuthFlow, PubkyHttpClient, PubkySession, PublicKey,
 };
 use serde_json::json;
 use std::str;
@@ -37,36 +51,99 @@ use tokio::runtime::Runtime;
 use tokio::time;
 
 pub struct NetworkClient {
-    client: Mutex<Arc<Pubky>>,
+    state: Mutex<NetworkState>,
+}
+
+struct NetworkState {
+    client: Arc<Pubky>,
+    http: PubkyHttpClient,
 }
 
 impl NetworkClient {
     fn new() -> Self {
+        let http = PubkyHttpClient::new().unwrap();
         Self {
-            client: Mutex::new(Arc::new(Pubky::new().unwrap())),
+            state: Mutex::new(NetworkState {
+                client: Arc::new(Pubky::with_client(http.clone())),
+                http,
+            }),
         }
     }
 
     pub fn switch_network(&self, use_testnet: bool) {
-        let new_client = if use_testnet {
-            Arc::new(Pubky::testnet().unwrap())
+        let http = if use_testnet {
+            PubkyHttpClient::testnet().unwrap()
         } else {
-            Arc::new(Pubky::new().unwrap())
+            PubkyHttpClient::new().unwrap()
         };
 
-        let mut client = self.client.lock().unwrap();
-        *client = new_client;
+        *self.state.lock().unwrap() = NetworkState {
+            client: Arc::new(Pubky::with_client(http.clone())),
+            http,
+        };
+    }
+
+    pub fn configure(&self, config: PubkyClientConfig) -> Result<(), PubkyCoreError> {
+        let mut builder = PubkyHttpClient::builder();
+
+        if let Some(host) = config.testnet_host.as_deref() {
+            builder.testnet_with_host(host);
+        } else if config.use_testnet {
+            builder.testnet();
+        }
+
+        if let Some(timeout) = config.request_timeout_ms {
+            builder.request_timeout(Duration::from_millis(timeout));
+        }
+        if let Some(timeout) = config.read_timeout_ms {
+            builder.read_timeout(Duration::from_millis(timeout));
+        }
+        if let Some(max) = config.pool_max_idle_per_host {
+            let max = usize::try_from(max).map_err(|_| PubkyCoreError::Validation {
+                details: "pool_max_idle_per_host exceeds the platform limit".to_string(),
+            })?;
+            builder.pool_max_idle_per_host(max);
+        }
+        if let Some(limit) = config.max_error_body_bytes {
+            let limit = usize::try_from(limit).map_err(|_| PubkyCoreError::Validation {
+                details: "max_error_body_bytes exceeds the platform limit".to_string(),
+            })?;
+            builder.max_error_body_bytes(limit);
+        }
+        if let Some(extra) = config.user_agent_extra {
+            builder.user_agent_extra(extra);
+        }
+
+        let http = builder.build()?;
+        *self.state.lock().unwrap() = NetworkState {
+            client: Arc::new(Pubky::with_client(http.clone())),
+            http,
+        };
+        Ok(())
     }
 
     pub fn get_client(&self) -> Arc<Pubky> {
-        self.client.lock().unwrap().clone()
+        self.state.lock().unwrap().client.clone()
+    }
+
+    pub fn get_http_client(&self) -> PubkyHttpClient {
+        self.state.lock().unwrap().http.clone()
     }
 }
 
-static NETWORK_CLIENT: Lazy<NetworkClient> = Lazy::new(|| NetworkClient::new());
+static NETWORK_CLIENT: Lazy<NetworkClient> = Lazy::new(NetworkClient::new);
 
 pub fn get_pubky_client() -> Arc<Pubky> {
     NETWORK_CLIENT.get_client()
+}
+
+pub fn get_pubky_http_client() -> PubkyHttpClient {
+    NETWORK_CLIENT.get_http_client()
+}
+
+#[uniffi::export]
+pub fn configure_client(config: PubkyClientConfig) -> Result<(), PubkyCoreError> {
+    NETWORK_CLIENT.configure(config)
 }
 
 #[uniffi::export]
@@ -101,6 +178,7 @@ async fn export_grant_session_secret(session: &PubkySession) -> Result<String, S
         .ok_or_else(|| "Session secret is unavailable for this session type".to_string())
 }
 
+#[allow(deprecated)]
 fn export_cookie_session_secret(session: &PubkySession) -> Result<String, String> {
     session
         .as_cookie()
@@ -1003,6 +1081,47 @@ pub fn auth(url: String, secret_key: String) -> Vec<String> {
 
         let signer = client.signer(keypair);
         match signer.approve_auth(&url).await {
+            Ok(_) => create_response_vector(false, "Authorization success".to_string()),
+            Err(error) => create_response_vector(
+                true,
+                format!("Authorization failure: {}", full_error_chain(&error)),
+            ),
+        }
+    })
+}
+
+/// Approve only the requested capabilities selected by the user.
+///
+/// `approved_capabilities` uses Pubky's comma-separated `scope:actions`
+/// format. It may be empty to approve the authentication request without any
+/// capabilities. The upstream SDK rejects capabilities that exceed the
+/// original request.
+#[uniffi::export]
+pub fn auth_with_capabilities(
+    url: String,
+    secret_key: String,
+    approved_capabilities: String,
+) -> Vec<String> {
+    let capabilities = match Capabilities::try_from(approved_capabilities.as_str()) {
+        Ok(capabilities) => capabilities,
+        Err(error) => {
+            return create_response_vector(true, format!("Invalid approved capabilities: {error}"))
+        }
+    };
+
+    let runtime = TOKIO_RUNTIME.clone();
+    runtime.block_on(async {
+        let client = get_pubky_client();
+        let keypair = match get_keypair_from_secret_key(&secret_key) {
+            Ok(keypair) => keypair,
+            Err(error) => return create_response_vector(true, error),
+        };
+
+        let signer = client.signer(keypair);
+        match signer
+            .approve_auth_with_capabilities(&url, &capabilities)
+            .await
+        {
             Ok(_) => create_response_vector(false, "Authorization success".to_string()),
             Err(error) => create_response_vector(
                 true,

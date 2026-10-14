@@ -11,7 +11,7 @@ coordinating a migration across those apps.
 - **Public keys are always bare z-base32** (52 chars, no prefix) in every
   output: `public_key` fields, the session `pubky` field, `get_homeserver`,
   and the `publish`/`publish_https` return values. The underlying
-  `pubky` crate (0.10.x) renders `PublicKey::to_string()` as
+  `pubky` crate (0.16.x) renders `PublicKey::to_string()` as
   `pubky<z32>`, so all output sites must use `.z32()` instead — pubky's own
   storage URL parser rejects `pubky://pubky<z32>/...`, and downstream apps
   build `pubky://<key>/...` URLs from these values. Inputs accept either form.
@@ -22,11 +22,15 @@ coordinating a migration across those apps.
   `kind` (`"signin"` or `"signup"`; legacy `pubkyauth:///?...` URLs are
   `"signin"`) and, for signup links, optional `homeserver` (bare z32) and
   `signup_token` fields.
-- **Authentication mirrors pubky 0.10.** Grant auth is exposed through
+- **Authentication mirrors pubky 0.16.** Grant auth is exposed through
   `sign_up_grant`, `sign_in_grant`, `start_grant_auth_flow`, and
   `await_grant_auth_approval`; these return `grant_secret` in session JSON.
   The unqualified `sign_up`, `sign_in`, `start_auth_flow`, and
   `await_auth_approval` names are Grant aliases for downstream migration.
+- **Signer approval can be narrowed.** `auth` approves every capability in an
+  auth request, while `auth_with_capabilities` accepts the user-approved
+  comma-separated `scope:actions` subset. An empty string approves no
+  capabilities; the SDK rejects approvals that exceed the request.
 - **Legacy cookie auth remains available** through `sign_up_cookie`,
   `sign_in_cookie`, `start_cookie_auth_flow`, and
   `await_cookie_auth_approval`; these return `session_secret` in session JSON.
@@ -39,6 +43,33 @@ coordinating a migration across those apps.
 - **Grant management requires a root-capability session.** `list_grants`
   returns the account's active grants and `revoke_grant` revokes a grant by
   id, invalidating all sessions minted from it.
+- **New Pubky 0.16 APIs use typed native errors.** Existing functions keep the
+  `[error, data]` vector contract. The additive storage, event, lock, client
+  configuration, blocking-signin, and advanced Grant-flow APIs return native
+  `Result` values with `PubkyCoreError` variants instead.
+
+## Pubky 0.16 Client Bindings
+
+The high-level Pubky 0.16 client surface is available to generated Swift,
+Kotlin, and Python bindings:
+
+- Client configuration: request/read timeouts, connection pooling, bounded
+  error bodies, user-agent suffixes, mainnet, and custom-host testnet.
+- Storage: public and authenticated reads, public and private paths, raw bytes,
+  existence checks, metadata, paginated listings, writes, and deletes.
+- Authentication: Grant signin and signup flows, relay and callback
+  configuration, save/restore, non-blocking polling, cancellation, blocking
+  signin, session revalidation, Grant management, signed approvals, scoped
+  encryption keys, and custom offline-verifiable proofs.
+- Events: historical and live streams, multiple users, cursors, path filters,
+  private authenticated streams, reverse order, limits, and cancellation.
+- Locks: acquire, inspect, refresh, write, delete, and unlock.
+- Structured failures: transport, server status, validation, JSON decoding,
+  PKARR retryability, parsing, authentication expiry, build, and binding-state
+  errors.
+
+See [BINDING_PARITY.md](BINDING_PARITY.md) for the SDK-to-FFI mapping and the
+small set of Rust-specific low-level primitives intentionally kept internal.
 
 ## Building the SDK
 
