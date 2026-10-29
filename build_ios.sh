@@ -1,6 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e  # Exit immediately if a command exits with a non-zero status.
+set -euo pipefail
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 echo "Starting iOS build process..."
 
@@ -16,17 +19,9 @@ mkdir -p bindings/ios/
 # Set iOS deployment target
 export IPHONEOS_DEPLOYMENT_TARGET=13.4
 
-# Cargo Build
-echo "Building Rust libraries..."
-cargo build
-
-# Modify Cargo.toml
-echo "Updating Cargo.toml..."
-sed -i '' 's/crate[-_]type = .*/crate-type = ["cdylib", "staticlib"]/' Cargo.toml
-
 # Build release
 echo "Building release version..."
-cargo build --release
+cargo build --release --locked
 
 # Add iOS targets
 echo "Adding iOS targets..."
@@ -34,8 +29,8 @@ rustup target add aarch64-apple-ios-sim aarch64-apple-ios
 
 # Build for iOS simulator and device
 echo "Building for iOS targets..."
-cargo build --release --target=aarch64-apple-ios-sim
-cargo build --release --target=aarch64-apple-ios
+cargo build --release --locked --target=aarch64-apple-ios-sim
+cargo build --release --locked --target=aarch64-apple-ios
 
 # Generate Swift bindings
 echo "Generating Swift bindings..."
@@ -47,11 +42,16 @@ rm -rf ./bindings/ios/Headers
 rm -rf ./bindings/ios/ios-arm64
 rm -rf ./bindings/ios/ios-arm64-sim
 
-cargo run --bin uniffi-bindgen generate \
+cargo run --release --locked --bin uniffi-bindgen generate \
     --library ./target/release/libpubkycore.dylib \
     --language swift \
     --out-dir ./bindings/ios \
     || { echo "Failed to generate Swift bindings"; exit 1; }
+
+perl -pi -e 's/[ \t]+$//' \
+    bindings/ios/pubkycore.swift \
+    bindings/ios/pubkycoreFFI.h \
+    bindings/ios/pubkycoreFFI.modulemap
 
 # Handle modulemap file
 echo "Handling modulemap file..."

@@ -91,9 +91,9 @@ small set of Rust-specific low-level primitives intentionally kept internal.
 The Android build is pinned to the NDK version in `.ndk-version` (currently
 r29) and requires NDK r28 or newer. Install the pinned version with
 `sdkmanager "ndk;$(cat .ndk-version)"`. NDK r28+ emits ELF `LOAD` segments
-compatible with Android's 16 KB page size by default. After building all four
-shipped ABIs, the build runs `scripts/verify_android_page_size.sh` and fails if
-any 64-bit shared library has a `LOAD` alignment below `0x4000`.
+compatible with Android's 16 KB page size by default. Maven publication
+verification inspects the packaged AAR and fails if any 64-bit shared library
+has a `LOAD` alignment below `0x4000`.
 
 To verify already-built Android bindings without rebuilding them:
 
@@ -107,6 +107,37 @@ ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/$(cat .ndk-version)" \
 ./build.sh python
 ```
 
+### Release artifacts
+
+Generated native libraries are not stored in Git. A release matching the Cargo
+package version, such as `v0.4.0`, distributes:
+
+- `org.pubky:pubky-core-android:<version>` to the repository's GitHub Packages
+  Maven registry. Its AAR contains the compiled Kotlin bindings, rustls
+  platform-verifier support, and JNI libraries for all four Android ABIs.
+- `pubky-core-ffi-ios.zip` and `PubkyCore.xcframework.zip` through GitHub
+  Releases. The first archive supports manual integration. The second is the
+  binary artifact consumed by the repository's Swift package. Both support iOS
+  devices and Apple Silicon simulators.
+- Platform-specific Python wheels, built and tested by `Python wheels` CI.
+  PyPI publication is enabled after project ownership and Trusted Publishing
+  are configured; workflow artifacts can be installed directly beforehand.
+
+A manually dispatched or pull-request workflow produces a local Maven
+repository and iOS archives as temporary validation artifacts. Tagged builds
+publish Android with the workflow's `GITHUB_TOKEN`; no repository publishing
+secrets are required. The iOS release archives are built and uploaded locally
+because rebuilding an XCFramework changes its SwiftPM checksum. Local build
+output and `dist/` are ignored; run
+`scripts/verify_source_only.sh` before committing to ensure a native artifact
+is not accidentally added back to the repository.
+
+See `RELEASE.md` for the release sequence. The exact locally checksummed iOS
+archive must be uploaded; a CI rebuild is suitable for validation only.
+
+For Python installation and the supported wheel platforms, see
+[`bindings/python/README.md`](bindings/python/README.md).
+
 ## Run Tests:
 ```
 cargo test -- --test-threads=1
@@ -115,14 +146,24 @@ cargo test -- --test-threads=1
 ## iOS Integration
 
 ### Installation
-1. Add the XCFramework to your Xcode project:
+For Swift Package Manager, add
+`https://github.com/pubky/pubky-core-ffi` and select an exact released version.
+The `PubkyCore` product downloads and verifies the corresponding XCFramework;
+applications can then `import PubkyCore`.
+
+For manual integration:
+
+1. Build the iOS bindings or download `pubky-core-ffi-ios.zip` from a pinned
+   GitHub Release.
+
+2. Add the XCFramework to your Xcode project:
 
    - Drag bindings/ios/PubkyCore.xcframework into your Xcode project
      Ensure "Copy items if needed" is checked
      Add the framework to your target
 
 
-2. Copy the Swift bindings:
+3. Copy the Swift bindings:
 
    - Add bindings/ios/pubkycore.swift to your project
 
@@ -130,7 +171,7 @@ cargo test -- --test-threads=1
 ```swift
 import PubkyCore
 
-class PubkyManager {
+class PubkyManager(context: Context) {
     // Generate a new secret key
     func generateNewAccount() throws -> String {
         let result = try generateSecretKey()
@@ -234,21 +275,60 @@ class ViewController: UIViewController {
 ## Android Integration
 
 ### Installation
-1. Add the JNI libraries to your project:
+Add the authenticated GitHub Packages repository and a dependency version that
+matches the `pubky-core-ffi` release. For local builds, set `gpr.user` to your
+GitHub username and `gpr.key` to a classic personal access token with
+`read:packages` in your user-level Gradle properties; do not commit them.
 
-   - Copy the contents of bindings/android/jniLibs to your project's app/src/main/jniLibs directory
+```kotlin
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/pubky/pubky-core-ffi")
+        credentials {
+            username = providers.gradleProperty("gpr.user").orNull
+                ?: System.getenv("GITHUB_ACTOR")
+            password = providers.gradleProperty("gpr.key").orNull
+                ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
 
+dependencies {
+    implementation("org.pubky:pubky-core-android:0.4.0")
+}
+```
 
-2. Add the Kotlin bindings:
+Initialize Android certificate verification once, before network calls:
 
-   - Copy bindings/android/pubkycore.kt to your project's source directory
+```kotlin
+uniffi.pubkycore.RustlsInit.ensure(applicationContext)
+```
+
+The AAR supports Android API 21 and newer. Consumers migrating from copied
+bindings must remove their generated Kotlin, JNI libraries, and any local
+`RustlsInit`/rustls verifier classes to avoid duplicate classes or libraries.
+
+To build and verify the Maven publication locally, first run
+`./build_android.sh`, then use Gradle 8.13:
+
+```bash
+gradle -p android :library:publishAllPublicationsToBuildRepository
+./scripts/verify_android_maven_publication.sh android/library/build/repo 0.4.0
+gradle -p android :consumer:assembleDebug :consumer:assembleDebugAndroidTest :consumer:assembleRelease
+```
+
+The independent consumer resolves the generated Maven publication, including
+its transitive dependencies and consumer shrinker rules. Run
+`gradle -p android :consumer:connectedDebugAndroidTest` on an emulator to verify
+native loading, idempotent initialization, and an HTTPS request. For the page-size
+regression test, use a 16 KB system image and confirm `adb shell getconf PAGESIZE`
+returns `16384`.
 
 ### Basic Usage
 ```kotlin
 class PubkyManager {
     init {
-        // Initialize the library
-        System.loadLibrary("pubkycore")
+        RustlsInit.ensure(context)
     }
     
     fun generateNewAccount(): String {
@@ -305,7 +385,7 @@ class PubkyManager {
 ### Example Implementation
 ```kotlin   
 class MainActivity : AppCompatActivity() {
-    private val pubkyManager = PubkyManager()
+    private val pubkyManager by lazy { PubkyManager(applicationContext) }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

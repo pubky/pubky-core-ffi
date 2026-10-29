@@ -59,7 +59,7 @@ rm -rf "$BASE_DIR"
 mkdir -p "$JNILIBS_DIR"
 
 echo "Building host library for UniFFI binding generation..."
-cargo build --release
+cargo build --release --locked
 
 echo "Adding Android Rust targets..."
 rustup target add \
@@ -78,10 +78,7 @@ cargo ndk \
     -t arm64-v8a \
     -t x86 \
     -t x86_64 \
-    build --release
-
-echo "Verifying 16 KB ELF LOAD alignment..."
-./scripts/verify_android_page_size.sh "$JNILIBS_DIR"
+    build --release --locked
 
 case "$(uname -s)" in
     Darwin) HOST_LIBRARY="./target/release/libpubkycore.dylib" ;;
@@ -101,7 +98,7 @@ echo "Generating Kotlin bindings..."
 readonly TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-cargo run --release --bin uniffi-bindgen generate \
+cargo run --release --locked --bin uniffi-bindgen generate \
     --library "$HOST_LIBRARY" \
     --language kotlin \
     --out-dir "$TMP_DIR"
@@ -113,5 +110,6 @@ if [[ -z "$GENERATED_KOTLIN" ]]; then
 fi
 
 mv "$GENERATED_KOTLIN" "$BASE_DIR/pubkycore.kt"
+perl -pi -e 's/[ \t]+$//' "$BASE_DIR/pubkycore.kt"
 
 echo "Android build process completed successfully!"

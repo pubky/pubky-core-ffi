@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly REPOSITORY_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 readonly MIN_ALIGNMENT=$((16 * 1024))
 readonly JNILIBS_DIR="${1:-bindings/android/jniLibs}"
 
@@ -12,6 +14,12 @@ find_llvm_readelf() {
     fi
 
     local ndk_root="${ANDROID_NDK_HOME:-${NDK_HOME:-}}"
+    if [[ -z "$ndk_root" && -n "${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}" ]]; then
+        local sdk_root="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+        local ndk_version
+        ndk_version="$(tr -d '[:space:]' < "$REPOSITORY_DIR/.ndk-version")"
+        ndk_root="$sdk_root/ndk/$ndk_version"
+    fi
     if [[ -n "$ndk_root" ]]; then
         local candidate
         candidate="$(find "$ndk_root/toolchains/llvm/prebuilt" -path '*/bin/llvm-readelf' -perm -111 -print -quit 2>/dev/null || true)"

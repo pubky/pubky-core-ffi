@@ -1,0 +1,87 @@
+name: Python wheels
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.9"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check tag version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          version="$(awk -F '"' '/^version = / { print $2; exit }' Cargo.toml)"
+          test "$GITHUB_REF_NAME" = "v$version"
+      - name: Build portable wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          maturin-version: "1.15.0"
+          target: ${{ matrix.target }}
+          manylinux: "2_28"
+          args: --release --locked --out dist/python
+      - name: Install wheel without a source build
+        shell: bash
+        run: |
+          python -m pip install --no-deps --only-binary=:all: dist/python/*.whl
+      - name: Test installed wheel on Python 3.9
+        run: python tests/python/test_wheel.py
+      - name: Check documented import from the bindings directory
+        working-directory: bindings/python
+        run: python -c "from pubkycore import generate_secret_key; assert generate_secret_key()[0] == 'false'"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Test installed wheel on Python 3.14
+        shell: bash
+        run: |
+          python -m pip install --no-deps --only-binary=:all: dist/python/*.whl
+          python tests/python/test_wheel.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-wheel-${{ matrix.target }}
+          path: dist/python/*.whl
+          if-no-files-found: error
+
+  publish:
+    # Enable after PyPI ownership, Trusted Publishing, and pypi environment review
+    # protection are configured (see RELEASE.md).
+    if: startsWith(github.ref, 'refs/tags/') && vars.PYPI_PUBLISH_ENABLED == 'true'
+    needs: wheels
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: python-wheel-*
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
