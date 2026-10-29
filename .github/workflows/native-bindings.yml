@@ -65,6 +65,18 @@ jobs:
           gradle -p android
           :consumer:assembleDebug :consumer:assembleDebugAndroidTest :consumer:assembleRelease
           -PVERSION_NAME=${{ steps.version.outputs.value }}
+      - name: Enable emulator acceleration
+        run: sudo chmod a+rw /dev/kvm
+      - name: Run native consumer on a 16 KB emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis_ps16k
+          arch: x86_64
+          disable-animations: true
+          script: |
+            test "$(adb shell getconf PAGESIZE | tr -d '\r')" = "16384"
+            gradle -p android :consumer:connectedDebugAndroidTest -PVERSION_NAME=${{ steps.version.outputs.value }}
       - uses: actions/upload-artifact@v7
         with:
           name: pubky-core-android-maven
