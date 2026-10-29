@@ -60,6 +60,11 @@ jobs:
           ./scripts/verify_android_maven_publication.sh
           android/library/build/repo
           ${{ steps.version.outputs.value }}
+      - name: Build independent Maven consumer
+        run: >-
+          gradle -p android
+          :consumer:assembleDebug :consumer:assembleDebugAndroidTest :consumer:assembleRelease
+          -PVERSION_NAME=${{ steps.version.outputs.value }}
       - uses: actions/upload-artifact@v7
         with:
           name: pubky-core-android-maven
@@ -88,6 +93,8 @@ jobs:
         run: swift package dump-package >/dev/null
       - name: Build iOS bindings
         run: ./build_ios.sh
+      - name: Build Swift package against fresh local binary
+        run: ./scripts/verify_swift_package_build.sh
       - name: Package iOS bindings
         run: ./scripts/package_ios_bindings.sh
       - uses: actions/upload-artifact@v7

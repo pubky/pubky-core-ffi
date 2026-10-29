@@ -18,6 +18,7 @@
 /bindings/python/pubkycore/*.so
 /bindings/python/pubkycore/*.dylib
 /bindings/python/pubkycore/*.dll
+/bindings/python/pubkycore/__pycache__/
 
 # JetBrains project files
 /shelf/

@@ -86,19 +86,19 @@ RustBuffer uniffi_pubkycore_fn_func_auth(RustBuffer url, RustBuffer secret_key, 
 RustBuffer uniffi_pubkycore_fn_func_auth_with_capabilities(RustBuffer url, RustBuffer secret_key, RustBuffer approved_capabilities, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_pubkycore_fn_func_await_auth_approval(RustCallStatus *_Nonnull out_status
-    
+
 );
 RustBuffer uniffi_pubkycore_fn_func_await_cookie_auth_approval(RustCallStatus *_Nonnull out_status
-    
+
 );
 RustBuffer uniffi_pubkycore_fn_func_await_grant_auth_approval(RustCallStatus *_Nonnull out_status
-    
+
 );
 RustBuffer uniffi_pubkycore_fn_func_await_grant_auth_flow(RustCallStatus *_Nonnull out_status
-    
+
 );
 void uniffi_pubkycore_fn_func_cancel_grant_auth_flow(RustCallStatus *_Nonnull out_status
-    
+
 );
 void uniffi_pubkycore_fn_func_configure_client(RustBuffer config, RustCallStatus *_Nonnull out_status
 );
@@ -115,13 +115,13 @@ RustBuffer uniffi_pubkycore_fn_func_delete_with_session(RustBuffer url, RustBuff
 RustBuffer uniffi_pubkycore_fn_func_derive_grant_encryption_key(RustBuffer session_secret, RustBuffer path, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_pubkycore_fn_func_generate_mnemonic_phrase(RustCallStatus *_Nonnull out_status
-    
+
 );
 RustBuffer uniffi_pubkycore_fn_func_generate_mnemonic_phrase_and_keypair(RustCallStatus *_Nonnull out_status
-    
+
 );
 RustBuffer uniffi_pubkycore_fn_func_generate_secret_key(RustCallStatus *_Nonnull out_status
-    
+
 );
 RustBuffer uniffi_pubkycore_fn_func_get(RustBuffer url, RustCallStatus *_Nonnull out_status
 );
@@ -146,7 +146,7 @@ RustBuffer uniffi_pubkycore_fn_func_parse_auth_url(RustBuffer url, RustCallStatu
 RustBuffer uniffi_pubkycore_fn_func_parse_deep_link(RustBuffer url, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_pubkycore_fn_func_poll_grant_auth_flow(RustCallStatus *_Nonnull out_status
-    
+
 );
 int8_t uniffi_pubkycore_fn_func_public_exists(RustBuffer address, RustCallStatus *_Nonnull out_status
 );
@@ -165,7 +165,7 @@ RustBuffer uniffi_pubkycore_fn_func_put(RustBuffer url, RustBuffer content, Rust
 RustBuffer uniffi_pubkycore_fn_func_put_with_session(RustBuffer url, RustBuffer content, RustBuffer session_secret, RustCallStatus *_Nonnull out_status
 );
 void uniffi_pubkycore_fn_func_remove_event_listener(RustCallStatus *_Nonnull out_status
-    
+
 );
 RustBuffer uniffi_pubkycore_fn_func_republish_homeserver(RustBuffer secret_key, RustBuffer homeserver, RustCallStatus *_Nonnull out_status
 );
@@ -180,7 +180,7 @@ RustBuffer uniffi_pubkycore_fn_func_revalidate_session(RustBuffer session_secret
 RustBuffer uniffi_pubkycore_fn_func_revoke_grant(RustBuffer session_secret, RustBuffer grant_id, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_pubkycore_fn_func_save_grant_auth_flow(RustCallStatus *_Nonnull out_status
-    
+
 );
 void uniffi_pubkycore_fn_func_session_delete(RustBuffer path_or_address, RustBuffer session_secret, RustCallStatus *_Nonnull out_status
 );
@@ -227,7 +227,7 @@ RustBuffer uniffi_pubkycore_fn_func_start_grant_auth_flow(RustBuffer capabilitie
 RustBuffer uniffi_pubkycore_fn_func_start_grant_auth_flow_with_config(RustBuffer config, RustCallStatus *_Nonnull out_status
 );
 uint64_t uniffi_pubkycore_fn_func_stop_all_event_streams(RustCallStatus *_Nonnull out_status
-    
+
 );
 int8_t uniffi_pubkycore_fn_func_stop_event_stream(RustBuffer subscription_id, RustCallStatus *_Nonnull out_status
 );
@@ -352,249 +352,249 @@ void ffi_pubkycore_rust_future_free_void(void* _Nonnull handle
 void ffi_pubkycore_rust_future_complete_void(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
 );
 uint16_t uniffi_pubkycore_checksum_func_auth(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_auth_with_capabilities(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_await_auth_approval(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_await_cookie_auth_approval(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_await_grant_auth_approval(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_await_grant_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_cancel_grant_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_configure_client(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_create_custom_grant_proof(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_create_recovery_file(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_decrypt_recovery_file(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_delete_file(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_delete_with_session(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_derive_grant_encryption_key(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_generate_mnemonic_phrase(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_generate_mnemonic_phrase_and_keypair(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_generate_secret_key(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_get(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_get_homeserver(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_get_public_key_from_secret_key(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_get_signup_token(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_grant_encryption_key_scopes(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_grant_signed_approval(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_list(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_list_grants(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_mnemonic_phrase_to_keypair(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_parse_auth_url(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_parse_deep_link(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_poll_grant_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_public_exists(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_public_get_bytes(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_public_list(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_public_stats(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_publish(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_publish_https(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_put(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_put_with_session(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_remove_event_listener(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_republish_homeserver(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_resolve(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_resolve_https(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_restore_grant_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_revalidate_session(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_revoke_grant(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_save_grant_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_session_delete(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_session_exists(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_session_get_bytes(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_session_list(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_session_lock(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_session_put_bytes(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_session_stats(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_set_event_listener(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_in(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_in_cookie(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_in_cookie_blocking(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_in_grant(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_in_grant_blocking(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_out(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_up(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_up_cookie(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_sign_up_grant(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_start_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_start_cookie_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_start_event_stream(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_start_grant_auth_flow(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_start_grant_auth_flow_with_config(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_stop_all_event_streams(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_stop_event_stream(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_switch_network(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_validate_mnemonic_phrase(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_func_verify_custom_grant_proof(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkystoragelock_delete(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkystoragelock_info(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkystoragelock_put(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkystoragelock_refresh(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkystoragelock_unlock(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_eventlistener_on_event_occurred(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_event(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_error(void
-    
+
 );
 uint16_t uniffi_pubkycore_checksum_method_pubkyeventstreamlistener_on_complete(void
-    
+
 );
 uint32_t ffi_pubkycore_uniffi_contract_version(void
-    
+
 );
 

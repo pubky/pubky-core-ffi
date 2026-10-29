@@ -119,6 +119,9 @@ package version, such as `v0.4.0`, distributes:
   Releases. The first archive supports manual integration. The second is the
   binary artifact consumed by the repository's Swift package. Both support iOS
   devices and Apple Silicon simulators.
+- Platform-specific Python wheels, built and tested by `Python wheels` CI.
+  PyPI publication is enabled after project ownership and Trusted Publishing
+  are configured; workflow artifacts can be installed directly beforehand.
 
 A manually dispatched or pull-request workflow produces a local Maven
 repository and iOS archives as temporary validation artifacts. Tagged builds
@@ -131,6 +134,9 @@ is not accidentally added back to the repository.
 
 See `RELEASE.md` for the release sequence. The exact locally checksummed iOS
 archive must be uploaded; a CI rebuild is suitable for validation only.
+
+For Python installation and the supported wheel platforms, see
+[`bindings/python/README.md`](bindings/python/README.md).
 
 ## Run Tests:
 ```
@@ -165,7 +171,7 @@ For manual integration:
 ```swift
 import PubkyCore
 
-class PubkyManager {
+class PubkyManager(context: Context) {
     // Generate a new secret key
     func generateNewAccount() throws -> String {
         let result = try generateSecretKey()
@@ -292,20 +298,37 @@ dependencies {
 }
 ```
 
+Initialize Android certificate verification once, before network calls:
+
+```kotlin
+uniffi.pubkycore.RustlsInit.ensure(applicationContext)
+```
+
+The AAR supports Android API 21 and newer. Consumers migrating from copied
+bindings must remove their generated Kotlin, JNI libraries, and any local
+`RustlsInit`/rustls verifier classes to avoid duplicate classes or libraries.
+
 To build and verify the Maven publication locally, first run
 `./build_android.sh`, then use Gradle 8.13:
 
 ```bash
 gradle -p android :library:publishAllPublicationsToBuildRepository
 ./scripts/verify_android_maven_publication.sh android/library/build/repo 0.4.0
+gradle -p android :consumer:assembleDebug :consumer:assembleDebugAndroidTest :consumer:assembleRelease
 ```
+
+The independent consumer resolves the generated Maven publication, including
+its transitive dependencies and consumer shrinker rules. Run
+`gradle -p android :consumer:connectedDebugAndroidTest` on an emulator to verify
+native loading, idempotent initialization, and an HTTPS request. For the page-size
+regression test, use a 16 KB system image and confirm `adb shell getconf PAGESIZE`
+returns `16384`.
 
 ### Basic Usage
 ```kotlin
 class PubkyManager {
     init {
-        // Initialize the library
-        System.loadLibrary("pubkycore")
+        RustlsInit.ensure(context)
     }
     
     fun generateNewAccount(): String {
@@ -362,7 +385,7 @@ class PubkyManager {
 ### Example Implementation
 ```kotlin   
 class MainActivity : AppCompatActivity() {
-    private val pubkyManager = PubkyManager()
+    private val pubkyManager by lazy { PubkyManager(applicationContext) }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

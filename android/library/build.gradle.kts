@@ -22,7 +22,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 22
+        minSdk = 21
         buildConfigField("boolean", "TEST", "false")
         consumerProguardFiles("consumer-rules.pro")
     }

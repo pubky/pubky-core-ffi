@@ -19,13 +19,9 @@ mkdir -p bindings/ios/
 # Set iOS deployment target
 export IPHONEOS_DEPLOYMENT_TARGET=13.4
 
-# Cargo Build
-echo "Building Rust libraries..."
-cargo build
-
 # Build release
 echo "Building release version..."
-cargo build --release
+cargo build --release --locked
 
 # Add iOS targets
 echo "Adding iOS targets..."
@@ -33,8 +29,8 @@ rustup target add aarch64-apple-ios-sim aarch64-apple-ios
 
 # Build for iOS simulator and device
 echo "Building for iOS targets..."
-cargo build --release --target=aarch64-apple-ios-sim
-cargo build --release --target=aarch64-apple-ios
+cargo build --release --locked --target=aarch64-apple-ios-sim
+cargo build --release --locked --target=aarch64-apple-ios
 
 # Generate Swift bindings
 echo "Generating Swift bindings..."
@@ -46,7 +42,7 @@ rm -rf ./bindings/ios/Headers
 rm -rf ./bindings/ios/ios-arm64
 rm -rf ./bindings/ios/ios-arm64-sim
 
-cargo run --bin uniffi-bindgen generate \
+cargo run --release --locked --bin uniffi-bindgen generate \
     --library ./target/release/libpubkycore.dylib \
     --language swift \
     --out-dir ./bindings/ios \

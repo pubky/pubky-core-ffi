@@ -56,3 +56,24 @@ validation and will generally have a different checksum.
 Pushing the signed version tag runs the native-bindings workflow. It rebuilds
 and verifies the Android AAR, including 16 KB page alignment, then publishes it
 to GitHub Packages with the workflow's `GITHUB_TOKEN`.
+
+## 5. Publish Python wheels
+
+The `Python wheels` workflow builds platform-specific wheels from the same tag
+on Linux x86_64/arm64, macOS x86_64/arm64, and Windows x86_64. It installs each
+wheel and exercises native functions and typed records on Python 3.9 and 3.14.
+The Python package version is read from `Cargo.toml`, rather than a generated setup.py.
+
+Before the first PyPI release, a maintainer must:
+
+1. Establish ownership of the `pubkycore` project on PyPI.
+2. Register GitHub Trusted Publishing for owner `pubky`, repository
+   `pubky-core-ffi`, workflow `python-wheels.yml`, environment `pypi`.
+3. Configure required reviewers for the repository's `pypi` environment.
+4. Set the repository variable `PYPI_PUBLISH_ENABLED` to `true`.
+
+Until this setup is complete, tag builds produce tested, downloadable wheel
+artifacts and skip PyPI publication. Do not advertise the PyPI installation
+command as available until the first release is published. A signed tag and
+approval of the protected environment publish the exact wheels already tested
+by CI; the publish job does not rebuild them. No PyPI token is stored in GitHub.

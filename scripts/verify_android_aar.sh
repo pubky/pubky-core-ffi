@@ -43,6 +43,10 @@ grep -q '^org/rustls/platformverifier/CertificateVerifier.class$' "$TMP_DIR/clas
     echo "Error: AAR is missing rustls-platform-verifier JVM support." >&2
     exit 1
 }
+grep -q '^uniffi/pubkycore/RustlsInit.class$' "$TMP_DIR/classes.txt" || {
+    echo "Error: AAR is missing the Android TLS initializer." >&2
+    exit 1
+}
 
 "$SCRIPT_DIR/verify_android_page_size.sh" "$TMP_DIR/aar/jni"
 echo "Android AAR contains all ABIs, required JVM classes, and 16 KB-compatible 64-bit libraries."
