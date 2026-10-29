@@ -76,7 +76,16 @@ jobs:
           disable-animations: true
           script: |
             test "$(adb shell getconf PAGESIZE | tr -d '\r')" = "16384"
-            gradle -p android :consumer:connectedDebugAndroidTest -PVERSION_NAME=${{ steps.version.outputs.value }}
+            gradle -p android :consumer:connectedDebugAndroidTest -PVERSION_NAME=${{ steps.version.outputs.value }} || (adb logcat -d -t 1000; exit 1)
+      - name: Preserve Android runtime test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-consumer-test-results
+          path: |
+            android/consumer/build/reports/androidTests
+            android/consumer/build/outputs/androidTest-results
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v7
         with:
           name: pubky-core-android-maven
