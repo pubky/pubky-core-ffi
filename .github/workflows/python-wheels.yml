@@ -52,6 +52,9 @@ jobs:
           python -m pip install --no-deps --only-binary=:all: dist/python/*.whl
       - name: Test installed wheel on Python 3.9
         run: python tests/python/test_wheel.py
+      - name: Check documented import from the bindings directory
+        working-directory: bindings/python
+        run: python -c "from pubkycore import generate_secret_key; assert generate_secret_key()[0] == 'false'"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"

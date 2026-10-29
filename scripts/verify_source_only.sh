@@ -14,9 +14,7 @@ while IFS= read -r -d '' path; do
         bindings/android/pubkycore.kt | \
         bindings/android/jniLibs/* | \
         bindings/ios/*.xcframework/* | \
-        bindings/python/pubkycore/*.so | \
-        bindings/python/pubkycore/*.dylib | \
-        bindings/python/pubkycore/*.dll)
+        bindings/python/pubkycore/*)
             echo "Error: generated build output is tracked: $path" >&2
             failed=1
             ;;
