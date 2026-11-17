@@ -1564,6 +1564,7 @@ public enum PubkyCoreError {
     case Authentication(details: String, expired: Bool)
     case Build(details: String)
     case State(details: String)
+    case CredentialRefresh(status: UInt16?)
 
     fileprivate static func uniffiErrorHandler(_ error: RustBuffer) throws -> Error {
         return try FfiConverterTypePubkyCoreError.lift(error)
@@ -1605,6 +1606,9 @@ public struct FfiConverterTypePubkyCoreError: FfiConverterRustBuffer {
             )
         case 9: return try .State(
                 details: FfiConverterString.read(from: &buf)
+            )
+        case 10: return try .CredentialRefresh(
+                status: FfiConverterOptionUInt16.read(from: &buf)
             )
         default: throw UniffiInternalError.unexpectedEnumCase
         }
@@ -1650,6 +1654,10 @@ public struct FfiConverterTypePubkyCoreError: FfiConverterRustBuffer {
         case let .State(details):
             writeInt(&buf, Int32(9))
             FfiConverterString.write(details, into: &buf)
+
+        case let .CredentialRefresh(status):
+            writeInt(&buf, Int32(10))
+            FfiConverterOptionUInt16.write(status, into: &buf)
         }
     }
 }

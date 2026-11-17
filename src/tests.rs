@@ -49,7 +49,7 @@ mod tests {
             return;
         }
 
-        let inner_url = url.clone();
+        let folder = format!("pubky://{}/pub/test.com/", public_key);
 
         let put_result = put(
             url.clone(),
@@ -66,7 +66,7 @@ mod tests {
         assert_eq!(get_result[0], "false");
         assert_eq!(get_result[1], content);
 
-        let list_result = list(inner_url);
+        let list_result = list(folder);
         println!("List result: {:?}", list_result);
         assert_eq!(list_result[0], "false");
 
@@ -263,14 +263,11 @@ mod tests {
 
         std::thread::sleep(std::time::Duration::from_secs(2));
 
-        // Verify deletion by checking for empty content
+        // The deleted file is no longer found.
         let get_result = get(url.clone());
         println!("Get result after delete: {:?}", get_result);
-        assert_eq!(
-            get_result[1], "",
-            "File should be empty after deletion at URL: {}",
-            url
-        );
+        assert_eq!(get_result[0], "true", "{url} still exists: {get_result:?}");
+        assert!(get_result[1].contains("404"), "{}", get_result[1]);
     }
 
     // Test network switching
@@ -402,6 +399,106 @@ mod tests {
         let result = parse_auth_url(test_url.to_string());
         assert_eq!(result[0], "true");
         assert!(result[1].contains("cpk"), "unexpected error: {}", result[1]);
+    }
+
+    const PARENT_CALLBACK: &str = "https://accounts.example/auth/callback";
+    /// Any valid public key works as the holder's proof-of-possession key.
+    const PARENT_CLIENT_KEY: &str = HOMESERVER;
+    const PARENT_EPK: &str = "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc";
+
+    fn parent_grant_url(caps: &str, client_id: &str, extra: &str) -> String {
+        format!(
+            "pubkyauth://parent_grant?caps={caps}&relay=https://httprelay.pubky.app/inbox&cid={client_id}&cpk={PARENT_CLIENT_KEY}&epk={PARENT_EPK}{extra}"
+        )
+    }
+
+    #[test]
+    fn test_parse_parent_grant() {
+        let url = parent_grant_url(
+            "/pub/:rwe,/priv/:rwe",
+            PARENT_CALLBACK,
+            "&x-source=Accounts&x-success=https%3A%2F%2Faccounts.example%2Fdone",
+        );
+        let parsed = [parse_auth_url(url.clone()), parse_deep_link(url)].map(|result| {
+            assert_eq!(result[0], "false", "unexpected error: {}", result[1]);
+            serde_json::from_str::<serde_json::Value>(&result[1]).unwrap()
+        });
+
+        for json in &parsed {
+            assert_eq!(json["kind"], "parent_grant");
+            assert_eq!(json["relay"], "https://httprelay.pubky.app/inbox");
+            assert_eq!(json["client_id"], PARENT_CALLBACK);
+            assert_eq!(json["client_public_key"], PARENT_CLIENT_KEY);
+            assert_eq!(json["ephemeral_public_key"], PARENT_EPK);
+            assert_eq!(
+                json["capabilities"],
+                serde_json::json!([
+                    { "path": "/pub/", "permission": "rwe" },
+                    { "path": "/priv/", "permission": "rwe" },
+                ])
+            );
+            assert_eq!(json["x_source"], "Accounts");
+            assert_eq!(json["x_success"], "https://accounts.example/done");
+            for absent in ["secret", "homeserver", "signup_token", "approval_format"] {
+                assert!(json.get(absent).is_none(), "{absent} must be omitted");
+            }
+        }
+
+        // The deep link's canonical URL parses back to the same request.
+        let [_, deep_link] = parsed;
+        assert_eq!(deep_link["scheme"], "pubkyauth");
+        let reparsed = parse_deep_link(deep_link["url"].as_str().unwrap().to_string());
+        assert_eq!(reparsed[0], "false", "unexpected error: {}", reparsed[1]);
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&reparsed[1]).unwrap(),
+            deep_link
+        );
+    }
+
+    #[test]
+    fn test_parse_parent_grant_rejects_invalid_requests() {
+        let valid_caps = "/pub/:rwe,/priv/:rwe";
+        let cases = [
+            (
+                "caps outside ceiling",
+                parent_grant_url("/:rw", PARENT_CALLBACK, ""),
+            ),
+            (
+                "http callback",
+                parent_grant_url(valid_caps, "http://accounts.example/auth/callback", ""),
+            ),
+            (
+                "repeated cid",
+                parent_grant_url(valid_caps, PARENT_CALLBACK, "&cid=https://evil.example/cb"),
+            ),
+        ];
+
+        for (name, url) in cases {
+            for result in [parse_auth_url(url.clone()), parse_deep_link(url.clone())] {
+                assert_eq!(result[0], "true", "{name} was accepted: {}", result[1]);
+            }
+        }
+    }
+
+    // Exceeding the request must fail before anything is signed or delivered.
+    // The relay is unreachable, so reaching it would produce a transport error.
+    #[test]
+    fn test_parent_grant_approval_rejects_capabilities_beyond_request() {
+        let secret_key = hex::encode(generate_keypair().secret_key());
+        let url = format!(
+            "pubkyauth://parent_grant?caps=/pub/app/:rw&relay=http://127.0.0.1:9/inbox&cid={PARENT_CALLBACK}&cpk={PARENT_CLIENT_KEY}&epk={PARENT_EPK}"
+        );
+
+        for approved in ["/pub/app/:rwe", "/pub/:rw", "/priv/app/:r"] {
+            let result =
+                auth_with_capabilities(url.clone(), secret_key.clone(), approved.to_string());
+            assert_eq!(result[0], "true", "{approved} was approved");
+            assert!(
+                result[1].contains("approved capabilities exceed the pending request"),
+                "{approved}: unexpected error: {}",
+                result[1]
+            );
+        }
     }
 
     #[test]

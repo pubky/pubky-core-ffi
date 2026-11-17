@@ -11,17 +11,23 @@ coordinating a migration across those apps.
 - **Public keys are always bare z-base32** (52 chars, no prefix) in every
   output: `public_key` fields, the session `pubky` field, `get_homeserver`,
   and the `publish`/`publish_https` return values. The underlying
-  `pubky` crate (0.16.x) renders `PublicKey::to_string()` as
+  `pubky` crate (0.16 and later) renders `PublicKey::to_string()` as
   `pubky<z32>`, so all output sites must use `.z32()` instead — pubky's own
   storage URL parser rejects `pubky://pubky<z32>/...`, and downstream apps
   build `pubky://<key>/...` URLs from these values. Inputs accept either form.
 - **`uri` fields** use the pkarr URI form `pk:<z32>`.
 - **Response vectors** are `[error, data]` where `error` is the string
   `"true"` or `"false"`.
-- **`parse_auth_url`** returns `relay`, `capabilities`, `secret`, plus
-  `kind` (`"signin"` or `"signup"`; legacy `pubkyauth:///?...` URLs are
-  `"signin"`) and, for signup links, optional `homeserver` (bare z32) and
-  `signup_token` fields.
+- **`parse_auth_url`** returns `relay`, `capabilities`, and `kind`
+  (`"signin"`, `"signup"`, `"signin_grant"`, `"signup_grant"`, or
+  `"parent_grant"`; legacy `pubkyauth:///?...` URLs are `"signin"`). Links
+  that use a shared relay secret include `secret`. Signup links can include
+  `homeserver` (bare z32) and `signup_token`. Grant links include
+  `client_id`, `client_public_key` (bare z32), and `approval_format`, and
+  signed approval links include `ephemeral_public_key`. `parse_deep_link`
+  returns the same fields plus `scheme` and `url`. See
+  [Parent and child grants](#parent-and-child-grants) for the
+  `parent_grant` fields.
 - **Authentication mirrors pubky 0.16.** Grant auth is exposed through
   `sign_up_grant`, `sign_in_grant`, `start_grant_auth_flow`, and
   `await_grant_auth_approval`; these return `grant_secret` in session JSON.
@@ -42,11 +48,18 @@ coordinating a migration across those apps.
   cookie `session_secret`.
 - **Grant management requires a root-capability session.** `list_grants`
   returns the account's active grants and `revoke_grant` revokes a grant by
-  id, invalidating all sessions minted from it.
+  id, invalidating all sessions minted from it. Each listed grant has a
+  `kind` (`direct`, `parent`, or `child`), and a child has the `parent_id` of
+  its parent. Revoking a parent also revokes its children.
 - **New Pubky 0.16 APIs use typed native errors.** Existing functions keep the
   `[error, data]` vector contract. The additive storage, event, lock, client
   configuration, blocking-signin, and advanced Grant-flow APIs return native
   `Result` values with `PubkyCoreError` variants instead.
+  `PubkyCoreError.CredentialRefresh` reports a failed automatic Grant
+  credential refresh. Its optional `status` is the refresh endpoint's HTTP
+  status; it's absent when no response arrived, such as after a transport
+  failure. Native code that switches exhaustively over `PubkyCoreError` must
+  handle this case.
 
 ## Pubky 0.16 Client Bindings
 
@@ -65,11 +78,24 @@ Kotlin, and Python bindings:
   private authenticated streams, reverse order, limits, and cancellation.
 - Locks: acquire, inspect, refresh, write, delete, and unlock.
 - Structured failures: transport, server status, validation, JSON decoding,
-  PKARR retryability, parsing, authentication expiry, build, and binding-state
-  errors.
+  PKARR retryability, parsing, authentication expiry, build, binding-state,
+  and Grant credential refresh errors.
 
 See [BINDING_PARITY.md](BINDING_PARITY.md) for the SDK-to-FFI mapping and the
 small set of Rust-specific low-level primitives intentionally kept internal.
+
+## Parent and child grants
+
+A parent grant lets a trusted holder, such as Pubky Accounts, sign in
+first-party apps with child grants without asking the user to approve each app.
+`parse_auth_url` and `parse_deep_link` return `kind: "parent_grant"` with the
+holder's `client_id` (its HTTPS callback), `client_public_key`,
+`ephemeral_public_key`, `relay`, and requested `capabilities`; a parent request
+has no `secret` or `approval_format`. `auth_with_capabilities` approves the
+permissions the user accepted, and removing `e` from a scope withholds that
+scope's encryption keys. `list_grants` marks each grant as `direct`, `parent`,
+or `child` and gives each child its `parent_id`, and `revoke_grant` removes one
+app or, for a parent, the parent and all its children.
 
 ## Building the SDK
 

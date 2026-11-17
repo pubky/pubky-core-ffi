@@ -1,4 +1,5 @@
 use pubky::errors::{AuthError, BuildError, PkarrError, RequestError};
+use pubky::CredentialRefreshError;
 
 /// Structured errors for the additive typed binding APIs.
 ///
@@ -33,12 +34,23 @@ pub enum PubkyCoreError {
 
     #[error("Binding state error: {details}")]
     State { details: String },
+
+    /// `status` is `None` when no response arrived, such as a transport failure.
+    #[error("Grant credential refresh failed (status: {status:?})")]
+    CredentialRefresh { status: Option<u16> },
 }
 
 impl From<pubky::Error> for PubkyCoreError {
     fn from(error: pubky::Error) -> Self {
         match error {
             pubky::Error::Request(error) => error.into(),
+            pubky::Error::CredentialRefresh(CredentialRefreshError::Request { status }) => {
+                Self::CredentialRefresh {
+                    status: status.map(|status| status.as_u16()),
+                }
+            }
+            // ponytail: the upstream enum is non-exhaustive; unknown variants carry no status.
+            pubky::Error::CredentialRefresh(_) => Self::CredentialRefresh { status: None },
             pubky::Error::Pkarr(error) => error.into(),
             pubky::Error::Parse(error) => Self::Parse {
                 details: error.to_string(),
@@ -127,6 +139,19 @@ mod tests {
                 assert_eq!(details, "missing capability");
             }
             other => panic!("unexpected error: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn preserves_credential_refresh_status() {
+        for (status, expected) in [(Some(StatusCode::UNAUTHORIZED), Some(401)), (None, None)] {
+            let error = PubkyCoreError::from(pubky::Error::CredentialRefresh(
+                CredentialRefreshError::Request { status },
+            ));
+            assert!(
+                matches!(error, PubkyCoreError::CredentialRefresh { status } if status == expected),
+                "{error:?}"
+            );
         }
     }
 
