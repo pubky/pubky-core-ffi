@@ -19,22 +19,24 @@ pub fn pubky_deep_link_details_to_json(details: &PubkyDeepLinkDetails) -> Result
 pub fn parse_pubky_auth_url(url_str: &str) -> Result<PubkyAuthDetails, String> {
     let details = parse_pubky_deep_link(url_str)?;
     match details.kind.as_str() {
-        "signin" | "signup" | "signin_grant" | "signup_grant" => Ok(PubkyAuthDetails {
-            relay: details.relay.ok_or_else(|| "Missing relay".to_string())?,
-            capabilities: details.capabilities.unwrap_or_default(),
-            secret: details.secret,
-            kind: details.kind,
-            homeserver: details.homeserver,
-            signup_token: details.signup_token,
-            client_id: details.client_id,
-            client_public_key: details.client_public_key,
-            approval_format: details.approval_format,
-            ephemeral_public_key: details.ephemeral_public_key,
-            x_source: details.x_source,
-            x_success: details.x_success,
-            x_error: details.x_error,
-            x_cancel: details.x_cancel,
-        }),
+        "signin" | "signup" | "signin_grant" | "signup_grant" | "parent_grant" => {
+            Ok(PubkyAuthDetails {
+                relay: details.relay.ok_or_else(|| "Missing relay".to_string())?,
+                capabilities: details.capabilities.unwrap_or_default(),
+                secret: details.secret,
+                kind: details.kind,
+                homeserver: details.homeserver,
+                signup_token: details.signup_token,
+                client_id: details.client_id,
+                client_public_key: details.client_public_key,
+                approval_format: details.approval_format,
+                ephemeral_public_key: details.ephemeral_public_key,
+                x_source: details.x_source,
+                x_success: details.x_success,
+                x_error: details.x_error,
+                x_cancel: details.x_cancel,
+            })
+        }
         other => Err(format!("Invalid auth URL intent '{}'", other)),
     }
 }
@@ -130,6 +132,25 @@ fn deep_link_details(deep_link: &DeepLink) -> PubkyDeepLinkDetails {
                 Some(params.client_pk.z32()),
                 Some(grant_approval_format(params.approval_format)),
                 grant_ephemeral_public_key(params.relay_channel),
+                callbacks,
+            )
+        }
+        // `kind` selects the parent approval envelope: no secret or approval_format.
+        DeepLink::ParentGrant(link) => {
+            let params = link.params();
+            auth_deep_link_details(
+                link.scheme().as_str(),
+                link.intent(),
+                link.to_string(),
+                params.relay.to_string(),
+                &params.capabilities,
+                None,
+                None,
+                None,
+                Some(params.client_id.to_string()),
+                Some(params.client_pk.z32()),
+                None,
+                Some(URL_SAFE_NO_PAD.encode(params.ephemeral_public_key)),
                 callbacks,
             )
         }

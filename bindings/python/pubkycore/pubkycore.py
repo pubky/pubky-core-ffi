@@ -2592,6 +2592,15 @@ class PubkyCoreError:  # type: ignore
         def __repr__(self):
             return "PubkyCoreError.State({})".format(str(self))
     _UniffiTempPubkyCoreError.State = State # type: ignore
+    class CredentialRefresh(_UniffiTempPubkyCoreError):
+        def __init__(self, status):
+            super().__init__(", ".join([
+                "status={!r}".format(status),
+            ]))
+            self.status = status
+        def __repr__(self):
+            return "PubkyCoreError.CredentialRefresh({})".format(str(self))
+    _UniffiTempPubkyCoreError.CredentialRefresh = CredentialRefresh # type: ignore
 
 PubkyCoreError = _UniffiTempPubkyCoreError # type: ignore
 del _UniffiTempPubkyCoreError
@@ -2640,6 +2649,10 @@ class _UniffiConverterTypePubkyCoreError(_UniffiConverterRustBuffer):
             return PubkyCoreError.State(
                 details=_UniffiConverterString.read(buf),
             )
+        if variant == 10:
+            return PubkyCoreError.CredentialRefresh(
+                status=_UniffiConverterOptionalUInt16.read(buf),
+            )
         raise InternalError("Raw enum value doesn't match any cases")
 
     @staticmethod
@@ -2674,6 +2687,9 @@ class _UniffiConverterTypePubkyCoreError(_UniffiConverterRustBuffer):
         if isinstance(value, PubkyCoreError.State):
             buf.write_i32(9)
             _UniffiConverterString.write(value.details, buf)
+        if isinstance(value, PubkyCoreError.CredentialRefresh):
+            buf.write_i32(10)
+            _UniffiConverterOptionalUInt16.write(value.status, buf)
 
 
 

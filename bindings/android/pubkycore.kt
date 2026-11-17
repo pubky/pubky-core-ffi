@@ -2189,6 +2189,13 @@ sealed class PubkyCoreException: Exception() {
             get() = "details=${ `details` }"
     }
     
+    class CredentialRefresh(
+        val `status`: UShort?
+        ) : PubkyCoreException() {
+        override val message
+            get() = "status=${ `status` }"
+    }
+    
 
     companion object ErrorHandler : CallStatusErrorHandler<PubkyCoreException> {
         override fun lift(error_buf: RustBuffer.ByValue): PubkyCoreException = FfiConverterTypePubkyCoreError.lift(error_buf)
@@ -2231,6 +2238,9 @@ public object FfiConverterTypePubkyCoreError : FfiConverterRustBuffer<PubkyCoreE
                 )
             9 -> PubkyCoreException.State(
                 FfiConverterString.read(buf),
+                )
+            10 -> PubkyCoreException.CredentialRefresh(
+                FfiConverterOptionalUShort.read(buf),
                 )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
@@ -2286,6 +2296,11 @@ public object FfiConverterTypePubkyCoreError : FfiConverterRustBuffer<PubkyCoreE
                 4
                 + FfiConverterString.allocationSize(value.`details`)
             )
+            is PubkyCoreException.CredentialRefresh -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4
+                + FfiConverterOptionalUShort.allocationSize(value.`status`)
+            )
         }
     }
 
@@ -2337,6 +2352,11 @@ public object FfiConverterTypePubkyCoreError : FfiConverterRustBuffer<PubkyCoreE
             is PubkyCoreException.State -> {
                 buf.putInt(9)
                 FfiConverterString.write(value.`details`, buf)
+                Unit
+            }
+            is PubkyCoreException.CredentialRefresh -> {
+                buf.putInt(10)
+                FfiConverterOptionalUShort.write(value.`status`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }

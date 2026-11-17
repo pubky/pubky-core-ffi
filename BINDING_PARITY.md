@@ -1,4 +1,4 @@
-# Pubky 0.16 Binding Parity
+# Pubky binding parity
 
 This project binds Pubky's high-level client capabilities rather than exposing
 Rust implementation types such as `RequestBuilder`, generic serde helpers, or
@@ -21,6 +21,10 @@ the same UniFFI surface.
 | Grant flow cancellation | `cancel_grant_auth_flow` |
 | Signed/HPKE grant approvals | `GrantApprovalMode`, `GrantAuthFlowConfig.approval_format` |
 | User-selected auth approval | `auth_with_capabilities` |
+| Parent request inspection | `parse_auth_url`, `parse_deep_link` (`kind: "parent_grant"`) |
+| Parent approval with separate storage and encryption consent | `auth`, `auth_with_capabilities` |
+| Parent and child grouping | `list_grants` (`kind`, `parent_id`) |
+| Child removal and cascading parent removal | `revoke_grant` |
 | Scoped encryption-key recovery | `grant_encryption_key_scopes`, `derive_grant_encryption_key`, `grant_signed_approval` |
 | Custom Grant proofs | `create_custom_grant_proof`, `verify_custom_grant_proof` |
 | Blocking direct signin | `sign_in_grant_blocking`, `sign_in_cookie_blocking` |
@@ -28,6 +32,7 @@ the same UniFFI surface.
 | Private event streams | `EventStreamConfig.session_secret` |
 | WebDAV locks | `session_lock`, `PubkyStorageLock` methods |
 | Typed failures | `PubkyCoreError` |
+| Grant credential refresh failures | `PubkyCoreError::CredentialRefresh { status }` |
 
 The legacy string-vector APIs remain available unchanged for downstream
 compatibility.
