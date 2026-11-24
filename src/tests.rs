@@ -520,6 +520,51 @@ mod tests {
         assert_eq!(republish_result[1], "Homeserver republished successfully");
     }
 
+    // Publishes to the live DHT: custom records and the homeserver record must
+    // survive each other's publishing, in both directions.
+    #[test]
+    fn test_dns_records_and_homeserver_record_coexist() {
+        let (keypair, secret_key, homeserver) = get_test_setup();
+        let public_key = keypair.public_key().z32();
+
+        let republished = republish_homeserver(secret_key.clone(), homeserver.clone());
+        assert_eq!(republished[0], "false", "{:?}", republished);
+
+        let changes = r#"{"add":[{"name":"@","type":"A","ttl":300,"value":"192.0.2.1"}]}"#;
+        let edited = edit_dns_records(secret_key.clone(), changes.to_string(), None);
+        assert_eq!(edited[0], "false", "{:?}", edited);
+        let stored: serde_json::Value = serde_json::from_str(&edited[1]).unwrap();
+        assert_eq!(stored["records"][0]["value"], "192.0.2.1");
+        assert_eq!(stored["other_records"], 1);
+        assert_eq!(
+            get_homeserver(public_key.clone()),
+            vec!["false".to_string(), homeserver.clone()]
+        );
+
+        let republished = republish_homeserver(secret_key.clone(), homeserver.clone());
+        assert_eq!(republished[0], "false", "{:?}", republished);
+        let resolved = resolve_dns_records(public_key.clone(), None);
+        assert_eq!(resolved[0], "false", "{:?}", resolved);
+        let resolved: serde_json::Value = serde_json::from_str(&resolved[1]).unwrap();
+        assert_eq!(resolved["records"][0]["value"], "192.0.2.1");
+
+        let again = republish_packet(
+            public_key.clone(),
+            stored["signed_packet"].as_str().map(str::to_string),
+        );
+        assert_eq!(again[0], "false", "{:?}", again);
+
+        let changes = r#"{"remove":[{"name":"@","type":"A","ttl":300,"value":"192.0.2.1"}]}"#;
+        let removed = edit_dns_records(secret_key, changes.to_string(), None);
+        assert_eq!(removed[0], "false", "{:?}", removed);
+        let removed: serde_json::Value = serde_json::from_str(&removed[1]).unwrap();
+        assert_eq!(removed["records"], serde_json::json!([]));
+        assert_eq!(
+            get_homeserver(public_key),
+            vec!["false".to_string(), homeserver]
+        );
+    }
+
     // Test generate_mnemonic_phrase
     #[test]
     fn test_generate_mnemonic_phrase() {

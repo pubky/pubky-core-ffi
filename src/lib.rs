@@ -3,6 +3,7 @@
 mod auth;
 mod auth_flow;
 mod binding_error;
+mod dns_records;
 mod events;
 mod grant_features;
 mod keypair;
@@ -17,6 +18,7 @@ mod utils;
 pub use auth::*;
 pub use auth_flow::*;
 pub use binding_error::*;
+pub use dns_records::*;
 pub use events::*;
 pub use grant_features::*;
 pub use keypair::*;

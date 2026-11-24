@@ -43,6 +43,16 @@ coordinating a migration across those apps.
 - **Grant management requires a root-capability session.** `list_grants`
   returns the account's active grants and `revoke_grant` revokes a grant by
   id, invalidating all sessions minted from it.
+- **DNS records are edited in place, never replaced.** `resolve_dns_records`
+  lists a key's A, AAAA, CNAME, MX and TXT records, and `edit_dns_records`
+  adds or removes some of them. An edit starts from the most recent packet
+  (network, local cache, or a stored copy) and copies every other record,
+  including the `_pubky` homeserver record, unchanged. It is refused when the
+  network cannot be read, and re-applied when a newer packet appears while
+  publishing. `republish_packet` re-announces the current packet as-is,
+  without a secret key, so records do not expire. All three return the
+  `[error, data]` vector, with `PKDNS_*` error codes. Unlike the legacy
+  `publish`, they never drop the homeserver record.
 - **New Pubky 0.16 APIs use typed native errors.** Existing functions keep the
   `[error, data]` vector contract. The additive storage, event, lock, client
   configuration, blocking-signin, and advanced Grant-flow APIs return native
