@@ -538,6 +538,10 @@ pub fn sign_up_grant(
             }
         };
 
+        // Signup publishes `_pubky`; never on top of a packet we could not read.
+        if let Err(error) = require_readable_packet(&client, &keypair.public_key()).await {
+            return create_response_vector(true, format!("signup failure: {}", error));
+        }
         let signer = client.signer(keypair);
         let client_id = match parse_client_id(&client_id) {
             Ok(client_id) => client_id,
@@ -598,6 +602,10 @@ pub fn sign_up_cookie(
             }
         };
 
+        // Signup publishes `_pubky`; never on top of a packet we could not read.
+        if let Err(error) = require_readable_packet(&client, &keypair.public_key()).await {
+            return create_response_vector(true, format!("signup failure: {}", error));
+        }
         let signer = client.signer(keypair);
         match signer
             .signup_cookie(&homeserver_public_key, signup_token.as_deref())
@@ -636,13 +644,8 @@ pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<Strin
             }
         };
 
-        let signer = client.signer(keypair);
-        match signer
-            .pkdns()
-            .publish_homeserver_force(Some(&homeserver_public_key))
-            .await
-        {
-            Ok(_) => {
+        match republish_homeserver_with(&client, keypair, &homeserver_public_key).await {
+            Ok(()) => {
                 create_response_vector(false, "Homeserver republished successfully".to_string())
             }
             Err(error) => {
@@ -650,6 +653,22 @@ pub fn republish_homeserver(secret_key: String, homeserver: String) -> Vec<Strin
             }
         }
     })
+}
+
+/// Publishes `_pubky` for `keypair`, keeping the key's other records. Refuses
+/// when the current packet cannot be read, so a failed read never replaces it.
+async fn republish_homeserver_with(
+    client: &Pubky,
+    keypair: pubky::Keypair,
+    homeserver: &PublicKey,
+) -> Result<(), String> {
+    require_readable_packet(client, &keypair.public_key()).await?;
+    client
+        .signer(keypair)
+        .pkdns()
+        .publish_homeserver_force(Some(homeserver))
+        .await
+        .map_err(|error| error.to_string())
 }
 
 #[uniffi::export]

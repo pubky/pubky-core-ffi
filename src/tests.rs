@@ -527,13 +527,19 @@ mod tests {
         let (keypair, secret_key, homeserver) = get_test_setup();
         let public_key = keypair.public_key().z32();
 
-        let republished = republish_homeserver(secret_key.clone(), homeserver.clone());
-        assert_eq!(republished[0], "false", "{:?}", republished);
-
+        // A record added before the key has a homeserver, as Ring allows.
         let changes = r#"{"add":[{"name":"@","type":"A","ttl":300,"value":"192.0.2.1"}]}"#;
         let edited = edit_dns_records(secret_key.clone(), changes.to_string(), None);
         assert_eq!(edited[0], "false", "{:?}", edited);
-        let stored: serde_json::Value = serde_json::from_str(&edited[1]).unwrap();
+        let edited: serde_json::Value = serde_json::from_str(&edited[1]).unwrap();
+        assert_eq!(edited["other_records"], 0);
+
+        // Publishing the homeserver (what signup does) keeps that record.
+        let republished = republish_homeserver(secret_key.clone(), homeserver.clone());
+        assert_eq!(republished[0], "false", "{:?}", republished);
+        let stored = resolve_dns_records(public_key.clone(), None);
+        assert_eq!(stored[0], "false", "{:?}", stored);
+        let stored: serde_json::Value = serde_json::from_str(&stored[1]).unwrap();
         assert_eq!(stored["records"][0]["value"], "192.0.2.1");
         assert_eq!(stored["other_records"], 1);
         assert_eq!(
@@ -563,6 +569,43 @@ mod tests {
             get_homeserver(public_key),
             vec!["false".to_string(), homeserver]
         );
+    }
+
+    // When the key's packet cannot be read, the homeserver publish is refused
+    // instead of replacing the packet with one that only holds `_pubky`.
+    #[test]
+    fn test_republish_homeserver_refuses_when_the_packet_cannot_be_read() {
+        let (keypair, secret_key, homeserver) = get_test_setup();
+        let public_key = keypair.public_key().z32();
+        let changes = r#"{"add":[{"name":"@","type":"A","ttl":300,"value":"192.0.2.2"}]}"#;
+        let edited = edit_dns_records(secret_key, changes.to_string(), None);
+        assert_eq!(edited[0], "false", "{:?}", edited);
+        let before: serde_json::Value = serde_json::from_str(&edited[1]).unwrap();
+
+        // A client whose only route to the network is a relay that refuses connections.
+        let mut builder = PubkyHttpClient::builder();
+        builder.pkarr(|pkarr| {
+            pkarr
+                .no_default_network()
+                .relays(&["http://127.0.0.1:9"])
+                .expect("valid relay URL")
+        });
+        let unreachable = Pubky::with_client(builder.build().unwrap());
+        let homeserver = PublicKey::try_from(homeserver.as_str()).unwrap();
+        let result = TOKIO_RUNTIME.block_on(republish_homeserver_with(
+            &unreachable,
+            keypair,
+            &homeserver,
+        ));
+
+        let error = result.expect_err("republish must fail when the packet cannot be read");
+        assert!(error.starts_with("PKDNS_RESOLVE_FAILED"), "{error}");
+        let after = resolve_dns_records(public_key, None);
+        assert_eq!(after[0], "false", "{:?}", after);
+        let after: serde_json::Value = serde_json::from_str(&after[1]).unwrap();
+        assert_eq!(after["timestamp"], before["timestamp"]);
+        assert_eq!(after["records"], before["records"]);
+        assert_eq!(after["other_records"], 0);
     }
 
     // Test generate_mnemonic_phrase

@@ -13,7 +13,7 @@ use pubky::pkarr::dns::rdata::{RData, A, AAAA, MX, TXT};
 use pubky::pkarr::dns::{Name, ResourceRecord, CLASS};
 use pubky::pkarr::errors::{PublishError, ResolveError, SignedPacketBuildError};
 use pubky::pkarr::{ResolvePolicy, SignedPacket, Timestamp};
-use pubky::{Keypair, PublicKey};
+use pubky::{Keypair, Pubky, PublicKey};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashSet;
@@ -433,7 +433,14 @@ async fn resolve_latest(
     known: Option<SignedPacket>,
 ) -> Result<Option<SignedPacket>, String> {
     let client = get_pubky_client();
-    let pkarr = client.client().pkarr();
+    resolve_latest_with(client.client().pkarr(), public_key, known).await
+}
+
+async fn resolve_latest_with(
+    pkarr: &pubky::pkarr::Client,
+    public_key: &PublicKey,
+    known: Option<SignedPacket>,
+) -> Result<Option<SignedPacket>, String> {
     let network = match pkarr.resolve(public_key, ResolvePolicy::NetworkOnly).await {
         Ok(packet) => Some(packet),
         Err(ResolveError::NotFound) => None,
@@ -444,6 +451,22 @@ async fn resolve_latest(
         .await
         .ok();
     Ok(most_recent([network, cached, known]))
+}
+
+/// Checks that a key's current packet can be read before the SDK publishes its
+/// `_pubky` record.
+///
+/// The SDK treats a failed network read as "no packet" and would then publish
+/// `_pubky` alone, dropping every other record of the key. A successful read
+/// also puts the packet in the client's cache, which the SDK reads as well, so
+/// it builds on top of it. A key with no packet yet passes.
+pub(crate) async fn require_readable_packet(
+    client: &Pubky,
+    public_key: &PublicKey,
+) -> Result<(), String> {
+    resolve_latest_with(client.client().pkarr(), public_key, None)
+        .await
+        .map(|_| ())
 }
 
 fn parse_optional_known(
