@@ -2188,6 +2188,7 @@ version = "0.4.0"
 dependencies = [
  "base64 0.22.1",
  "bip39",
+ "bytes",
  "futures-util",
  "hex",
  "jni",
